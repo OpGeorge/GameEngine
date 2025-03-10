@@ -1,11 +1,14 @@
 #pragma once
 
-#include "gen_window.hpp"
-#include "gen_pipeline.hpp"
 #include "gen_device.hpp"
-#include "gen_swap_chain.hpp"
-
 #include "gen_game_object.hpp"
+#include "gen_pipeline.hpp"
+#include "gen_renderer.hpp"
+#include "gen_window.hpp"
+
+
+
+
 
 
 #include <memory>
@@ -34,11 +37,6 @@ namespace gen {
 		void loadGameObjects();
 		void createPipelineLayot();
 		void createPipeline();
-		void createCommandBuffers();
-		void freeCommandBuffers();
-		void drawFrame();
-		void recreateSwapChain();
-		void recordCommandBuffer(int imageIndex);
 		void renderGameObjcets(VkCommandBuffer commandBuffer);
 
 
@@ -48,13 +46,12 @@ namespace gen {
 
 		GenDevice genDevice{ genWindow };
 
-		std::unique_ptr<GenSwapChain> genSwapChain;
+		GenRenderer genRenderer{ genWindow,genDevice };
 
 		std::unique_ptr<GenPipeline> genPipeline;
 
 		VkPipelineLayout pipelineLayout;
 
-		std::vector<VkCommandBuffer> commandBuffers;
 
 		std::vector<GenGameObject> gameObjects;
 
