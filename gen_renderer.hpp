@@ -43,6 +43,7 @@ namespace gen {
 
 		bool isFrameInProgress() const { return isFrameStarted; };
 		VkRenderPass getSwapChainRenderPass() const { return genSwapChain->getRenderPass(); };
+		float getAspectratio() const { return genSwapChain->extentAspectRatio(); }
 		VkCommandBuffer getCurrentCommandBuffer() const {
 			
 			assert(isFrameStarted && "Cannot get command buffer when frame not in progress\n\n\n");

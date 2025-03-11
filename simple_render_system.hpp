@@ -1,9 +1,11 @@
 
 #pragma once
 
+#include "gen_camera.hpp"
 #include "gen_device.hpp"
 #include "gen_game_object.hpp"
 #include "gen_pipeline.hpp"
+
 
 
 
@@ -31,7 +33,7 @@ namespace gen {
 
 	
 
-		void renderGameObjcets(VkCommandBuffer commandBuffer, std::vector<GenGameObject> &gameObjects);
+		void renderGameObjcets(VkCommandBuffer commandBuffer, std::vector<GenGameObject> &gameObjects, const GenCamera& camera );
 
 	private:
 

@@ -83,9 +83,11 @@ namespace gen {
 	}
 
 
-	void SimpleRenderSystem::renderGameObjcets(VkCommandBuffer commandBuffer, std::vector<GenGameObject>& gameObjects) {
+	void SimpleRenderSystem::renderGameObjcets(VkCommandBuffer commandBuffer, std::vector<GenGameObject>& gameObjects, const GenCamera& camera) {
 
 		genPipeline->bind(commandBuffer);
+
+		auto projection = camera.getProjcetion() * camera.getView();
 
 		for (auto& obj : gameObjects) {
 			obj.transform.rotation.y = glm::mod(obj.transform.rotation.y + .001f, glm::two_pi<float>());
@@ -94,7 +96,7 @@ namespace gen {
 			SimplePushConstantData push{};
 			
 			push.color = obj.color;
-			push.transform = obj.transform.mat4();
+			push.transform = projection * obj.transform.mat4();
 
 
 			vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(SimplePushConstantData), &push);

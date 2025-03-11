@@ -41,13 +41,21 @@ namespace gen {
 		}
 		else {
 			std::shared_ptr<GenSwapChain> oldSwapChain = std::move(genSwapChain);
-			genSwapChain = std::make_unique<GenSwapChain>(genDevice, extent, std::move(oldSwapChain));
+			genSwapChain = std::make_unique<GenSwapChain>(genDevice, extent, oldSwapChain);
 
 			if (!oldSwapChain->compareSwapFormats(*genSwapChain.get())) {
 				throw std::runtime_error("Swap chain image(or depth) format has changed! \n\n\n");
 
 
 			}
+
+			if (!genSwapChain->imageCount() != commandBuffers.size()) {
+			
+				freeCommandBuffers();
+				createCommandBuffers();
+			
+			}
+
 		}
 		
 	}
