@@ -27,6 +27,13 @@ namespace gen {
 		GenRenderer(const GenRenderer&) = delete;
 		GenRenderer& operator=(const GenRenderer&) = delete;
 
+		int getFrameIndex() const {
+		
+			assert(isFrameStarted && "Cannot get frame index when frame not in progress\n\n\n");
+			return currentFrameIndex;
+
+		}
+
 		VkCommandBuffer beginFrame();
 		void endFrame();
 
@@ -39,7 +46,7 @@ namespace gen {
 		VkCommandBuffer getCurrentCommandBuffer() const {
 			
 			assert(isFrameStarted && "Cannot get command buffer when frame not in progress\n\n\n");
-			return commandBuffers[currentImageIndex];
+			return commandBuffers[currentFrameIndex];
 
 
 		};
@@ -67,6 +74,7 @@ namespace gen {
 
 		bool isFrameStarted{false};
 		int currentFrameIndex;
+		
 
 	
 

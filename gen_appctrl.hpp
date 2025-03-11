@@ -2,7 +2,7 @@
 
 #include "gen_device.hpp"
 #include "gen_game_object.hpp"
-#include "gen_pipeline.hpp"
+
 #include "gen_renderer.hpp"
 #include "gen_window.hpp"
 
@@ -35,9 +35,7 @@ namespace gen {
 	private:
 
 		void loadGameObjects();
-		void createPipelineLayot();
-		void createPipeline();
-		void renderGameObjcets(VkCommandBuffer commandBuffer);
+	
 
 
 
@@ -47,10 +45,6 @@ namespace gen {
 		GenDevice genDevice{ genWindow };
 
 		GenRenderer genRenderer{ genWindow,genDevice };
-
-		std::unique_ptr<GenPipeline> genPipeline;
-
-		VkPipelineLayout pipelineLayout;
 
 
 		std::vector<GenGameObject> gameObjects;

@@ -40,11 +40,12 @@ namespace gen {
 			genSwapChain = std::make_unique<GenSwapChain>(genDevice, extent);
 		}
 		else {
-			genSwapChain = std::make_unique<GenSwapChain>(genDevice, extent, std::move(genSwapChain));
-			if (genSwapChain->imageCount() != commandBuffers.size()) {
+			std::shared_ptr<GenSwapChain> oldSwapChain = std::move(genSwapChain);
+			genSwapChain = std::make_unique<GenSwapChain>(genDevice, extent, std::move(oldSwapChain));
 
-				freeCommandBuffers();
-				createCommandBuffers();
+			if (!oldSwapChain->compareSwapFormats(*genSwapChain.get())) {
+				throw std::runtime_error("Swap chain image(or depth) format has changed! \n\n\n");
+
 
 			}
 		}
@@ -55,7 +56,7 @@ namespace gen {
 
 	void GenRenderer::createCommandBuffers() {
 
-		commandBuffers.resize(genSwapChain->imageCount());
+		commandBuffers.resize(GenSwapChain::MAX_FRAMES_IN_FLIGHT);
 
 		VkCommandBufferAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -139,6 +140,7 @@ namespace gen {
 		}
 
 		isFrameStarted = false;
+		currentFrameIndex = (currentFrameIndex + 1) % GenSwapChain::MAX_FRAMES_IN_FLIGHT;
 		
 
 

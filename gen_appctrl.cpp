@@ -1,4 +1,5 @@
 #include "gen_appctrl.hpp"
+#include "simple_render_system.hpp"
 
 #include <stdexcept>
 #include <array>
@@ -12,28 +13,24 @@
 
 namespace gen {
 
-	struct SimplePushConstantData {
-		glm::mat2 transform{1.f};
-		glm::vec2 offfset;
-		alignas(16) glm::vec3 color;
 
-	};
 
 
 	AppCtrl::AppCtrl() {
 		loadGameObjects();
-		createPipelineLayot();
-		createPipeline();
+	
 
 	
 	}
 
 	AppCtrl::~AppCtrl() {
-		vkDestroyPipelineLayout(genDevice.device(), pipelineLayout, nullptr);
+		
 
 	}
 
 	void AppCtrl::run() {
+
+		SimpleRenderSystem simpleRenderSystem{ genDevice, genRenderer.getSwapChainRenderPass() };
 		
 		while (!genWindow.shouldClose()) {
 			
@@ -41,7 +38,7 @@ namespace gen {
 			if (auto commandBuffer = genRenderer.beginFrame()) {
 
 				genRenderer.beginSwachChainRenderPass(commandBuffer);
-				renderGameObjcets(commandBuffer);
+				simpleRenderSystem.renderGameObjcets(commandBuffer,gameObjects);
 				genRenderer.endSwachChainRenderPass(commandBuffer);
 				genRenderer.endFrame();
 			}
@@ -51,92 +48,80 @@ namespace gen {
 		vkDeviceWaitIdle(genDevice.device());
 	}
 
+	std::unique_ptr<GenModel> createCubeModel(GenDevice& device, glm::vec3 offset) {
+		std::vector<GenModel::Vertex> vertices{
+
+			// left face (white)
+			{{-.5f, -.5f, -.5f}, {.9f, .9f, .9f}},
+			{{-.5f, .5f, .5f}, {.9f, .9f, .9f}},
+			{{-.5f, -.5f, .5f}, {.9f, .9f, .9f}},
+			{{-.5f, -.5f, -.5f}, {.9f, .9f, .9f}},
+			{{-.5f, .5f, -.5f}, {.9f, .9f, .9f}},
+			{{-.5f, .5f, .5f}, {.9f, .9f, .9f}},
+
+			// right face (yellow)
+			{{.5f, -.5f, -.5f}, {.8f, .8f, .1f}},
+			{{.5f, .5f, .5f}, {.8f, .8f, .1f}},
+			{{.5f, -.5f, .5f}, {.8f, .8f, .1f}},
+			{{.5f, -.5f, -.5f}, {.8f, .8f, .1f}},
+			{{.5f, .5f, -.5f}, {.8f, .8f, .1f}},
+			{{.5f, .5f, .5f}, {.8f, .8f, .1f}},
+
+			// top face (orange, remember y axis points down)
+			{{-.5f, -.5f, -.5f}, {.9f, .6f, .1f}},
+			{{.5f, -.5f, .5f}, {.9f, .6f, .1f}},
+			{{-.5f, -.5f, .5f}, {.9f, .6f, .1f}},
+			{{-.5f, -.5f, -.5f}, {.9f, .6f, .1f}},
+			{{.5f, -.5f, -.5f}, {.9f, .6f, .1f}},
+			{{.5f, -.5f, .5f}, {.9f, .6f, .1f}},
+
+			// bottom face (red)
+			{{-.5f, .5f, -.5f}, {.8f, .1f, .1f}},
+			{{.5f, .5f, .5f}, {.8f, .1f, .1f}},
+			{{-.5f, .5f, .5f}, {.8f, .1f, .1f}},
+			{{-.5f, .5f, -.5f}, {.8f, .1f, .1f}},
+			{{.5f, .5f, -.5f}, {.8f, .1f, .1f}},
+			{{.5f, .5f, .5f}, {.8f, .1f, .1f}},
+
+			// nose face (blue)
+			{{-.5f, -.5f, 0.5f}, {.1f, .1f, .8f}},
+			{{.5f, .5f, 0.5f}, {.1f, .1f, .8f}},
+			{{-.5f, .5f, 0.5f}, {.1f, .1f, .8f}},
+			{{-.5f, -.5f, 0.5f}, {.1f, .1f, .8f}},
+			{{.5f, -.5f, 0.5f}, {.1f, .1f, .8f}},
+			{{.5f, .5f, 0.5f}, {.1f, .1f, .8f}},
+
+			// tail face (green)
+			{{-.5f, -.5f, -0.5f}, {.1f, .8f, .1f}},
+			{{.5f, .5f, -0.5f}, {.1f, .8f, .1f}},
+			{{-.5f, .5f, -0.5f}, {.1f, .8f, .1f}},
+			{{-.5f, -.5f, -0.5f}, {.1f, .8f, .1f}},
+			{{.5f, -.5f, -0.5f}, {.1f, .8f, .1f}},
+			{{.5f, .5f, -0.5f}, {.1f, .8f, .1f}},
+
+		};
+		for (auto& v : vertices) {
+			v.position += offset;
+		}
+		return std::make_unique<GenModel>(device, vertices);
+	}
+
+
 	void AppCtrl::loadGameObjects() {
 	
-		std::vector<GenModel::Vertex> vertices{
-			{{0.0f,-0.5f},{1.0f,0.0f,0.0f}},
-			{{0.5f,0.5f},{0.0f,1.0f,0.0f}},
-			{{-0.5f,0.5f},{0.0f,0.0f,1.0f}},
-		};
+		std::shared_ptr<GenModel> genModel = createCubeModel(genDevice, { .0f,.0f,.0f });
 
-		auto genModel = std::make_shared<GenModel>(genDevice, vertices);
-		auto triangle = GenGameObject::createGameObject();
-		
-		triangle.model = genModel;
-		triangle.color = { 0.1f,0.8f,0.1f };
-		triangle.transform2d.translation.x = .2f;
-		triangle.transform2d.scale = { 2.f,.5f };
-		triangle.transform2d.rotation = -.25f * glm::two_pi<float>();
+		auto cube = GenGameObject::createGameObject();
+		cube.model = genModel;
+		cube.transform.translation = {.0f,.0f,.5f};
+		cube.transform.scale = { .5f,.5f,.5f };
 
-
-		gameObjects.push_back(std::move(triangle));
+		gameObjects.push_back(std::move(cube));
 
 	}
 
-	void AppCtrl::createPipelineLayot() {
-
-		
-		VkPushConstantRange pushConstantRange{};
-
-		pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-		pushConstantRange.offset = 0;
-		pushConstantRange.size = sizeof(SimplePushConstantData);
-
-
 	
-		VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
-		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		pipelineLayoutInfo.setLayoutCount = 0;
-		pipelineLayoutInfo.pSetLayouts = nullptr;
-		pipelineLayoutInfo.pushConstantRangeCount = 1;
-		pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
-
-		if (vkCreatePipelineLayout(genDevice.device(), &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
-			throw std::runtime_error("failed to create pipeline layout ! \n\n\n");
-
-		}
-
-
-		
-	}
-
-	void AppCtrl::createPipeline() {
-		
 	
-		assert(pipelineLayout != nullptr && "\nCannot create pipeline before pipeline layout \n\n\n");
-
-
-
-		PipelineConfigInfo pipelineConfig{};
-		GenPipeline::defaultPipelineConfigInfo(pipelineConfig);
-
-		pipelineConfig.renderPass = genRenderer.getSwapChainRenderPass();
-		pipelineConfig.pipelineLayout = pipelineLayout;
-
-		genPipeline = std::make_unique<GenPipeline>(genDevice, "shaders/simple_shader.vert.spv",
-				"shaders/simple_shader.frag.spv", pipelineConfig);
-
-	
-	}
-
-
-	void AppCtrl::renderGameObjcets(VkCommandBuffer commandBuffer) {
-
-		genPipeline->bind(commandBuffer);
-	
-		for (auto& obj : gameObjects) {
-			SimplePushConstantData push{};
-			push.offfset = obj.transform2d.translation;
-			push.color = obj.color;
-			push.transform = obj.transform2d.mat2();
-
-
-			vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(SimplePushConstantData), &push);
-			obj.model->bind(commandBuffer);
-			obj.model->draw(commandBuffer);
-		}
-	
-	}
 
 	
 }
