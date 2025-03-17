@@ -90,8 +90,7 @@ namespace gen {
 		auto projection = camera.getProjcetion() * camera.getView();
 
 		for (auto& obj : gameObjects) {
-			obj.transform.rotation.y = glm::mod(obj.transform.rotation.y + .001f, glm::two_pi<float>());
-			obj.transform.rotation.x = glm::mod(obj.transform.rotation.x + .0005f, glm::two_pi<float>());
+			
 
 			SimplePushConstantData push{};
 			

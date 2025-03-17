@@ -22,7 +22,13 @@ namespace gen {
 
 		};
 
-		GenModel(GenDevice &device,const std::vector<Vertex> &vertices);
+		struct Builder {
+
+			std::vector<Vertex> vertices{};
+			std::vector<uint32_t> indices{};
+		};
+
+		GenModel(GenDevice &device,const GenModel::Builder &builder);
 		~GenModel();
 
 		GenModel(const GenModel&) = delete;
@@ -34,11 +40,19 @@ namespace gen {
 
 	private:
 		void createVertexBuffers(const std::vector<Vertex>& vertices);
+		void createIndexBuffers(const std::vector<uint32_t>& indices);
 
 		GenDevice& genDevice;
+
 		VkBuffer vertexBuffer;
 		VkDeviceMemory vertexBufferMemory;
 		uint32_t vertexCount;
+
+		VkBuffer indexBuffer;
+		VkDeviceMemory indexBufferMemory;
+		uint32_t indexCount;
+
+		bool hasIndexBuffer = false;
 
 
 	};

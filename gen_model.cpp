@@ -3,15 +3,21 @@
 
 namespace gen {
 
-	GenModel::GenModel(GenDevice& device, const std::vector<Vertex>& vertices) : genDevice{device} {
+	GenModel::GenModel(GenDevice& device, const GenModel::Builder &builder) : genDevice{device} {
 	
-		createVertexBuffers(vertices);
-
+		createVertexBuffers(builder.vertices);
+		createIndexBuffers(builder.indices);
 	}
 	GenModel::~GenModel() {
 	
 		vkDestroyBuffer(genDevice.device(), vertexBuffer, nullptr);
 		vkFreeMemory(genDevice.device(), vertexBufferMemory, nullptr);
+
+		if (hasIndexBuffer) {
+			vkDestroyBuffer(genDevice.device(), indexBuffer, nullptr);
+			vkFreeMemory(genDevice.device(), indexBufferMemory, nullptr);
+		}
+
 	}
 
 	void GenModel::createVertexBuffers(const std::vector<Vertex>& vertices) {
@@ -21,23 +27,87 @@ namespace gen {
 
 		VkDeviceSize bufferSize = sizeof(vertices[0]) * vertexCount;
 
+		VkBuffer stagingBuffer;
+		VkDeviceMemory stagingBufferMemory;
 
-		genDevice.createBuffer(bufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+
+
+		genDevice.createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+			stagingBuffer,
+			stagingBufferMemory);
+
+		void* data;
+		vkMapMemory(genDevice.device(), stagingBufferMemory, 0, bufferSize, 0, &data);
+		memcpy(data, vertices.data(), static_cast<size_t>(bufferSize));
+		vkUnmapMemory(genDevice.device(),stagingBufferMemory);
+		
+		genDevice.createBuffer(bufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
 			vertexBuffer,
 			vertexBufferMemory);
 
-		void* data;
-		vkMapMemory(genDevice.device(), vertexBufferMemory, 0, bufferSize, 0, &data);
-		memcpy(data, vertices.data(), static_cast<size_t>(bufferSize));
-		vkUnmapMemory(genDevice.device(),vertexBufferMemory);
-		
+		genDevice.copyBuffer(stagingBuffer, vertexBuffer, bufferSize);
+
+		vkDestroyBuffer(genDevice.device(), stagingBuffer, nullptr);
+		vkFreeMemory(genDevice.device(), stagingBufferMemory, nullptr);
+
 	}
 
 
+	void GenModel::createIndexBuffers(const std::vector<uint32_t>& indices ) {
+
+		indexCount = static_cast<uint32_t>(indices.size());
+		hasIndexBuffer = indexCount > 0;
+		if (!hasIndexBuffer) {
+			return;
+
+		}
+
+		VkDeviceSize bufferSize = sizeof(indices[0]) * indexCount;
+
+
+		VkBuffer stagingBuffer;
+		VkDeviceMemory stagingBufferMemory;
+
+
+
+		genDevice.createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+			stagingBuffer,
+			stagingBufferMemory);
+
+		void* data;
+		vkMapMemory(genDevice.device(), stagingBufferMemory, 0, bufferSize, 0, &data);
+		memcpy(data, indices.data(), static_cast<size_t>(bufferSize));
+		vkUnmapMemory(genDevice.device(), stagingBufferMemory);
+
+		genDevice.createBuffer(bufferSize, VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+			indexBuffer,
+			indexBufferMemory);
+
+		genDevice.copyBuffer(stagingBuffer, indexBuffer, bufferSize);
+
+		vkDestroyBuffer(genDevice.device(), stagingBuffer, nullptr);
+		vkFreeMemory(genDevice.device(), stagingBufferMemory, nullptr);
+
+
+
+		
+
+	}
+
 	void GenModel::draw(VkCommandBuffer commandBuffer) {
+
+		if (hasIndexBuffer) {
+			vkCmdDrawIndexed(commandBuffer,indexCount,1,0,0,0);
+		}
+		else {
+			vkCmdDraw(commandBuffer, vertexCount, 1, 0, 0);
+		}
 	
-		vkCmdDraw(commandBuffer, vertexCount, 1, 0, 0);
+		
 
 	
 	}
@@ -47,6 +117,13 @@ namespace gen {
 		VkBuffer buffers[] = { vertexBuffer };
 		VkDeviceSize offsets[] = { 0 };
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, buffers, offsets);
+
+
+		if (hasIndexBuffer) {
+			vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+		}
+
+
 	}
 
 
