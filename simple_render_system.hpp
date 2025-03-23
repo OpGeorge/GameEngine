@@ -5,7 +5,7 @@
 #include "gen_device.hpp"
 #include "gen_game_object.hpp"
 #include "gen_pipeline.hpp"
-
+#include "gen_frame_info.hpp"
 
 
 
@@ -33,7 +33,7 @@ namespace gen {
 
 	
 
-		void renderGameObjcets(VkCommandBuffer commandBuffer, std::vector<GenGameObject> &gameObjects, const GenCamera& camera );
+		void renderGameObjcets(FrameInfo &frameInfo, std::vector<GenGameObject> &gameObjects);
 
 	private:
 

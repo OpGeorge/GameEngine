@@ -1,4 +1,5 @@
 #include "gen_appctrl.hpp"
+#include "gen_buffer.hpp"
 
 
 #include "gen_camera.hpp"
@@ -21,7 +22,11 @@
 
 namespace gen {
 
+	struct GlobalUbo {
 
+		glm::mat4 projectionView{ 1.f };
+		glm::vec3 lightDirection = glm::normalize(glm::vec3{ 1.f,-3.f,-1.f });
+	};
 
 
 	AppCtrl::AppCtrl() {
@@ -37,6 +42,21 @@ namespace gen {
 	}
 
 	void AppCtrl::run() {
+
+		
+		std::vector<std::unique_ptr<GenBuffer>> uboBuffers(GenSwapChain::MAX_FRAMES_IN_FLIGHT);
+		for (int i = 0; i < uboBuffers.size(); i++) {
+			uboBuffers[i] = std::make_unique<GenBuffer>(genDevice,
+				sizeof(GlobalUbo),
+				1,
+				VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT  );
+
+			uboBuffers[i]->map();
+		}
+
+		
+
 
 		SimpleRenderSystem simpleRenderSystem{ genDevice, genRenderer.getSwapChainRenderPass() };
 
@@ -74,8 +94,23 @@ namespace gen {
 
 			if (auto commandBuffer = genRenderer.beginFrame()) {
 
+				int frameIndex = genRenderer.getFrameIndex();
+				FrameInfo farmeInfo{frameIndex,frameTime,commandBuffer,camera};
+
+
+				//update
+				GlobalUbo ubo{};
+				ubo.projectionView = camera.getProjcetion() * camera.getView();
+				uboBuffers[frameIndex]->writeToBuffer(&ubo);
+				uboBuffers[frameIndex]->flush();
+
+
+
+
+
+				//render
 				genRenderer.beginSwachChainRenderPass(commandBuffer);
-				simpleRenderSystem.renderGameObjcets(commandBuffer,gameObjects,camera);
+				simpleRenderSystem.renderGameObjcets(farmeInfo,gameObjects);
 				genRenderer.endSwachChainRenderPass(commandBuffer);
 				genRenderer.endFrame();
 			}
@@ -146,65 +181,18 @@ namespace gen {
 	//}
 
 
-	std::unique_ptr<GenModel> createCubeModel(GenDevice& device, glm::vec3 offset) {
-		GenModel::Builder modelBuilder{};
-		modelBuilder.vertices = {
-			// left face (white)
-			{{-.5f, -.5f, -.5f}, {.9f, .9f, .9f}},
-			{{-.5f, .5f, .5f}, {.9f, .9f, .9f}},
-			{{-.5f, -.5f, .5f}, {.9f, .9f, .9f}},
-			{{-.5f, .5f, -.5f}, {.9f, .9f, .9f}},
-
-			// right face (yellow)
-			{{.5f, -.5f, -.5f}, {.8f, .8f, .1f}},
-			{{.5f, .5f, .5f}, {.8f, .8f, .1f}},
-			{{.5f, -.5f, .5f}, {.8f, .8f, .1f}},
-			{{.5f, .5f, -.5f}, {.8f, .8f, .1f}},
-
-			// top face (orange, remember y axis points down)
-			{{-.5f, -.5f, -.5f}, {.9f, .6f, .1f}},
-			{{.5f, -.5f, .5f}, {.9f, .6f, .1f}},
-			{{-.5f, -.5f, .5f}, {.9f, .6f, .1f}},
-			{{.5f, -.5f, -.5f}, {.9f, .6f, .1f}},
-
-			// bottom face (red)
-			{{-.5f, .5f, -.5f}, {.8f, .1f, .1f}},
-			{{.5f, .5f, .5f}, {.8f, .1f, .1f}},
-			{{-.5f, .5f, .5f}, {.8f, .1f, .1f}},
-			{{.5f, .5f, -.5f}, {.8f, .1f, .1f}},
-
-			// nose face (blue)
-			{{-.5f, -.5f, 0.5f}, {.1f, .1f, .8f}},
-			{{.5f, .5f, 0.5f}, {.1f, .1f, .8f}},
-			{{-.5f, .5f, 0.5f}, {.1f, .1f, .8f}},
-			{{.5f, -.5f, 0.5f}, {.1f, .1f, .8f}},
-
-			// tail face (green)
-			{{-.5f, -.5f, -0.5f}, {.1f, .8f, .1f}},
-			{{.5f, .5f, -0.5f}, {.1f, .8f, .1f}},
-			{{-.5f, .5f, -0.5f}, {.1f, .8f, .1f}},
-			{{.5f, -.5f, -0.5f}, {.1f, .8f, .1f}},
-		};
-		for (auto& v : modelBuilder.vertices) {
-			v.position += offset;
-		}
-
-		modelBuilder.indices = { 0,  1,  2,  0,  3,  1,  4,  5,  6,  4,  7,  5,  8,  9,  10, 8,  11, 9,
-								12, 13, 14, 12, 15, 13, 16, 17, 18, 16, 19, 17, 20, 21, 22, 20, 23, 21 };
-
-		return std::make_unique<GenModel>(device, modelBuilder);
-	}
+	
 
 	void AppCtrl::loadGameObjects() {
 	
-		std::shared_ptr<GenModel> genModel = createCubeModel(genDevice, { .0f,.0f,.0f });
+		std::shared_ptr<GenModel> genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/smooth_vase.obj");
 
-		auto cube = GenGameObject::createGameObject();
-		cube.model = genModel;
-		cube.transform.translation = {.0f,.0f, 2.5f};
-		cube.transform.scale = { .5f,.5f,.5f };
+		auto gameObj = GenGameObject::createGameObject();
+		gameObj.model = genModel;
+		gameObj.transform.translation = {.0f,.0f, 2.5f};
+		gameObj.transform.scale = glm::vec3(3.f);
 
-		gameObjects.push_back(std::move(cube));
+		gameObjects.push_back(std::move(gameObj));
 
 	}
 

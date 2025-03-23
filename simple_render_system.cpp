@@ -1,5 +1,6 @@
 #include "simple_render_system.hpp"
 
+
 #include <stdexcept>
 #include <array>
 
@@ -14,8 +15,9 @@ namespace gen {
 
 	struct SimplePushConstantData {
 		glm::mat4 transform{ 1.f };
+		glm::mat4 normalMatrix{ 1.f };
 		
-		alignas(16) glm::vec3 color;
+		
 		
 
 	};
@@ -83,24 +85,25 @@ namespace gen {
 	}
 
 
-	void SimpleRenderSystem::renderGameObjcets(VkCommandBuffer commandBuffer, std::vector<GenGameObject>& gameObjects, const GenCamera& camera) {
+	void SimpleRenderSystem::renderGameObjcets(FrameInfo &frameInfo, std::vector<GenGameObject>& gameObjects) {
 
-		genPipeline->bind(commandBuffer);
+		genPipeline->bind(frameInfo.commandBuffer);
 
-		auto projection = camera.getProjcetion() * camera.getView();
+		auto projection = frameInfo.camera.getProjcetion() * frameInfo.camera.getView();
 
 		for (auto& obj : gameObjects) {
 			
 
 			SimplePushConstantData push{};
 			
-			push.color = obj.color;
-			push.transform = projection * obj.transform.mat4();
+			auto modelMatrix = obj.transform.mat4();
 
+			push.transform = projection * modelMatrix;
+			push.normalMatrix = obj.transform.normalMatrix();
 
-			vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(SimplePushConstantData), &push);
-			obj.model->bind(commandBuffer);
-			obj.model->draw(commandBuffer);
+			vkCmdPushConstants(frameInfo.commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(SimplePushConstantData), &push);
+			obj.model->bind(frameInfo.commandBuffer);
+			obj.model->draw(frameInfo.commandBuffer);
 		}
 
 	}
