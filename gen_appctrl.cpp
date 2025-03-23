@@ -30,6 +30,10 @@ namespace gen {
 
 
 	AppCtrl::AppCtrl() {
+		globalPool = GenDescriptorPool::Builder(genDevice)
+			.setMaxSets(GenSwapChain::MAX_FRAMES_IN_FLIGHT)
+			.addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, GenSwapChain::MAX_FRAMES_IN_FLIGHT)
+			.build();
 		loadGameObjects();
 	
 
@@ -55,10 +59,19 @@ namespace gen {
 			uboBuffers[i]->map();
 		}
 
+		auto globalSetLayout = GenDescriptorSetLayout::Builder(genDevice)
+			.addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
+			.build();
+
+		std::vector<VkDescriptorSet> globalDescriptorSets(GenSwapChain::MAX_FRAMES_IN_FLIGHT);
+		for (int i = 0; i< globalDescriptorSets.size(); i++) {
+			
+			auto bufferInfo = uboBuffers[i]->descriptorInfo();
+			GenDescriptorWriter(*globalSetLayout, *globalPool).writeBuffer(0,&bufferInfo).build(globalDescriptorSets[i]);
 		
+		}
 
-
-		SimpleRenderSystem simpleRenderSystem{ genDevice, genRenderer.getSwapChainRenderPass() };
+		SimpleRenderSystem simpleRenderSystem{ genDevice, genRenderer.getSwapChainRenderPass(), globalSetLayout ->getDescriptorSetLayout()};
 
 		GenCamera camera{};
 
@@ -95,7 +108,7 @@ namespace gen {
 			if (auto commandBuffer = genRenderer.beginFrame()) {
 
 				int frameIndex = genRenderer.getFrameIndex();
-				FrameInfo farmeInfo{frameIndex,frameTime,commandBuffer,camera};
+				FrameInfo farmeInfo{frameIndex,frameTime,commandBuffer,camera,globalDescriptorSets[frameIndex]};
 
 
 				//update
@@ -103,7 +116,7 @@ namespace gen {
 				ubo.projectionView = camera.getProjcetion() * camera.getView();
 				uboBuffers[frameIndex]->writeToBuffer(&ubo);
 				uboBuffers[frameIndex]->flush();
-
+				 
 
 
 

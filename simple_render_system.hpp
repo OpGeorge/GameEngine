@@ -25,7 +25,7 @@ namespace gen {
 	public:
 		
 
-		SimpleRenderSystem(GenDevice &device, VkRenderPass renderPass);
+		SimpleRenderSystem(GenDevice &device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout);
 		~SimpleRenderSystem();
 
 		SimpleRenderSystem(const SimpleRenderSystem&) = delete;
@@ -38,7 +38,7 @@ namespace gen {
 	private:
 
 	
-		void createPipelineLayot();
+		void createPipelineLayot(VkDescriptorSetLayout globalSetLayout);
 		void createPipeline(VkRenderPass renderPass);
 		
 

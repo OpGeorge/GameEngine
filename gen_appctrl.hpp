@@ -6,6 +6,8 @@
 #include "gen_renderer.hpp"
 #include "gen_window.hpp"
 
+#include "gen_descriptors.hpp"
+
 
 
 
@@ -46,6 +48,7 @@ namespace gen {
 
 		GenRenderer genRenderer{ genWindow,genDevice };
 
+		std::unique_ptr<GenDescriptorPool> globalPool{};
 
 		std::vector<GenGameObject> gameObjects;
 
