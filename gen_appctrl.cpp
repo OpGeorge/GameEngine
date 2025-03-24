@@ -25,7 +25,11 @@ namespace gen {
 	struct GlobalUbo {
 
 		glm::mat4 projectionView{ 1.f };
-		glm::vec3 lightDirection = glm::normalize(glm::vec3{ 1.f,-3.f,-1.f });
+		glm::vec4 ambientLightColor{ 1.f,1.f,1.f,.02f };
+		glm::vec3 lightPotision{ -1.f };
+		alignas(16) glm::vec4 lightColor{ 1.f };
+
+		//glm::vec3 lightDirection = glm::normalize(glm::vec3{ 1.f,-3.f,-1.f });
 	};
 
 
@@ -82,6 +86,7 @@ namespace gen {
 		auto currentTime = std::chrono::high_resolution_clock::now();
 
 		auto viewerObject = GenGameObject::createGameObject();
+		viewerObject.transform.translation.z = -2.5f;
 		KeyboardMovementController cameraController{};
 
 		
@@ -199,13 +204,33 @@ namespace gen {
 	void AppCtrl::loadGameObjects() {
 	
 		std::shared_ptr<GenModel> genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/smooth_vase.obj");
+		auto smoothVase = GenGameObject::createGameObject();
+		smoothVase.model = genModel;
+		smoothVase.transform.translation = {-1.0f,.5f, 0.f};
+		smoothVase.transform.scale = glm::vec3(3.f);
+		gameObjects.push_back(std::move(smoothVase));
 
-		auto gameObj = GenGameObject::createGameObject();
-		gameObj.model = genModel;
-		gameObj.transform.translation = {.0f,.0f, 2.5f};
-		gameObj.transform.scale = glm::vec3(3.f);
+		genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/flat_vase.obj");
+		auto flatVase = GenGameObject::createGameObject();
+		flatVase.model = genModel;
+		flatVase.transform.translation = {1.f,.5f,0.f };
+		flatVase.transform.scale = glm::vec3(3.f);
+		gameObjects.push_back(std::move(flatVase)); // make sure the move has a valid pointer and a not null obj
 
-		gameObjects.push_back(std::move(gameObj));
+		genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/colored_cube.obj");
+		auto coloredCube = GenGameObject::createGameObject();
+		coloredCube.model = genModel;
+		coloredCube.transform.translation = { 0.f,.0f,0.f };
+		coloredCube.transform.scale = glm::vec3(0.5f);
+		gameObjects.push_back(std::move(coloredCube));
+
+		genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/quad.obj");
+		auto surface = GenGameObject::createGameObject();
+		surface.model = genModel;
+		surface.transform.translation = { 0.f,.5f,0.f };
+		surface.transform.scale = glm::vec3(3.f);
+		gameObjects.push_back(std::move(surface));
+
 
 	}
 
