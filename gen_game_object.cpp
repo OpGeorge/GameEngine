@@ -66,4 +66,18 @@ namespace gen {
 
 	}
 
+
+	GenGameObject GenGameObject::makePointLight(float intesity , float radius , glm::vec3 color) {
+	
+		GenGameObject gameObj = GenGameObject::createGameObject();
+		gameObj.color = color;
+		gameObj.transform.scale.x = radius;
+		gameObj.pointLight = std::make_unique<PointLightComponent>();
+		gameObj.pointLight->lightIntesity = intesity;
+
+		return gameObj;
+
+	
+	}
+
 }

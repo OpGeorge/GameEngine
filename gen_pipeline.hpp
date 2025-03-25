@@ -10,9 +10,14 @@ namespace gen {
 
 	struct PipelineConfigInfo {
 
+
+		PipelineConfigInfo() = default;
 		PipelineConfigInfo(const PipelineConfigInfo&) = delete;
 		PipelineConfigInfo& operator= (const PipelineConfigInfo&) = delete;
 
+
+		std::vector<VkVertexInputBindingDescription> bindingDescripstions{};
+		std::vector<VkVertexInputAttributeDescription> attributeDescripstions{};
 
 		VkPipelineViewportStateCreateInfo viewportInfo;
 		VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo;
@@ -44,6 +49,7 @@ namespace gen {
 
 		void bind(VkCommandBuffer commandBuffer);
 		static void defaultPipelineConfigInfo(PipelineConfigInfo& configInfo);
+		static void enableAlphaBlending(PipelineConfigInfo& configInfo);
 
 
 

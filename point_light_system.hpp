@@ -1,4 +1,4 @@
-
+#pragma once
 #pragma once
 
 #include "gen_camera.hpp"
@@ -20,43 +20,43 @@
 namespace gen {
 
 
-	class SimpleRenderSystem {
+	class PointLightSystem {
 
 	public:
-		
 
-		SimpleRenderSystem(GenDevice &device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout);
-		~SimpleRenderSystem();
 
-		SimpleRenderSystem(const SimpleRenderSystem&) = delete;
-		SimpleRenderSystem& operator=(const SimpleRenderSystem&) = delete;
+		PointLightSystem(GenDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout);
+		~PointLightSystem();
 
-	
+		PointLightSystem(const PointLightSystem&) = delete;
+		PointLightSystem& operator=(const PointLightSystem&) = delete;
 
-		void renderGameObjcets(FrameInfo &frameInfo);
+
+		void update(FrameInfo& frameInfo, GlobalUbo& ubo);
+		void render(FrameInfo& frameInfo);
 
 	private:
 
-	
+
 		void createPipelineLayot(VkDescriptorSetLayout globalSetLayout);
 		void createPipeline(VkRenderPass renderPass);
-		
 
 
 
 
-		
+
+
 
 		GenDevice& genDevice;
 
-		
+
 
 		std::unique_ptr<GenPipeline> genPipeline;
 
 		VkPipelineLayout pipelineLayout;
 
 
-		
+
 
 
 	};

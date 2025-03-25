@@ -50,7 +50,7 @@ namespace gen {
 
 		std::unique_ptr<GenDescriptorPool> globalPool{};
 
-		std::vector<GenGameObject> gameObjects;
+		GenGameObject::Map gameObjects;
 
 
 	};

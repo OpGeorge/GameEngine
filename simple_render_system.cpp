@@ -74,7 +74,7 @@ namespace gen {
 
 		PipelineConfigInfo pipelineConfig{};
 		GenPipeline::defaultPipelineConfigInfo(pipelineConfig);
-
+		
 		pipelineConfig.renderPass = renderPass;
 		pipelineConfig.pipelineLayout = pipelineLayout;
 
@@ -85,7 +85,7 @@ namespace gen {
 	}
 
 
-	void SimpleRenderSystem::renderGameObjcets(FrameInfo &frameInfo, std::vector<GenGameObject>& gameObjects) {
+	void SimpleRenderSystem::renderGameObjcets(FrameInfo &frameInfo) {
 
 		genPipeline->bind(frameInfo.commandBuffer);
 
@@ -101,9 +101,10 @@ namespace gen {
 			0,
 			nullptr);
 
-		for (auto& obj : gameObjects) {
+		for (auto& kv : frameInfo.gameObjcets) {
 			
-
+			auto& obj = kv.second;
+			if (!obj.model) continue;
 			SimplePushConstantData push{};
 			push.modelMatrix = obj.transform.mat4();
 			push.normalMatrix = obj.transform.normalMatrix();
