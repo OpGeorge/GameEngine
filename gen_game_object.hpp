@@ -1,6 +1,7 @@
 #pragma once
 
 #include "gen_model.hpp"
+#include "gen_texture.hpp"
 
 #include<glm/gtc/matrix_transform.hpp>
 #include <memory>
@@ -59,9 +60,13 @@ namespace gen {
 		std::shared_ptr<GenModel>model{};
 		std::unique_ptr<PointLightComponent> pointLight = nullptr;
 
+		std::shared_ptr<GenTexture> texture{};
+
 	private:
 		GenGameObject(id_t objId) : id{ objId } {}
 		id_t id;
+
+
 
 	};
 }
