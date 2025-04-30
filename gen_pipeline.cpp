@@ -88,13 +88,6 @@ namespace gen {
 		vertexInputInfo.pVertexBindingDescriptions = bindingDescriptions.data();
 
 
-
-
-		
-
-		
-
-
 		VkGraphicsPipelineCreateInfo pipelineInfo{};
 		pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 		pipelineInfo.stageCount = 2;
@@ -160,8 +153,6 @@ namespace gen {
 		configInfo.viewportInfo.scissorCount = 1;
 		configInfo.viewportInfo.pScissors = nullptr;
 		//orice pixel in afara la scissor este taiat
-
-		
 
 		configInfo.rasterizationInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
 		configInfo.rasterizationInfo.depthClampEnable = VK_FALSE;
