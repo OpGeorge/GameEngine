@@ -33,7 +33,7 @@ namespace gen {
 
 	
 
-		void renderGameObjcets(FrameInfo &frameInfo);
+		void renderGameObjects(FrameInfo &frameInfo);
 
 	private:
 

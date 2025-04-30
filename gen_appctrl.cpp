@@ -128,7 +128,7 @@ namespace gen {
 
 				//render
 				genRenderer.beginSwachChainRenderPass(commandBuffer);
-				simpleRenderSystem.renderGameObjcets(frameInfo);
+				simpleRenderSystem.renderGameObjects(frameInfo);
 				pointLightSystem.render(frameInfo);
 				genRenderer.endSwachChainRenderPass(commandBuffer);
 				genRenderer.endFrame();
