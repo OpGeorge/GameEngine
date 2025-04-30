@@ -34,7 +34,8 @@ namespace gen {
 		float frameTime;
 		VkCommandBuffer commandBuffer;
 		GenCamera& camera;
-		VkDescriptorSet globalDescriptorSet; 
+		VkDescriptorSet globalDescriptorSet;  // for lighting, etc.
+		std::unordered_map<GenGameObject::id_t, VkDescriptorSet>& objectDescriptorSets;  // for textured objects
 		GenGameObject::Map& gameObjcets;
 	};
 	

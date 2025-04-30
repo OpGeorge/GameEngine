@@ -29,6 +29,8 @@ layout(set= 0,binding = 0) uniform GlobalUbo
 layout(location = 0) out vec3 fragColor;
 layout(location = 1) out vec3 fragPosWorld;
 layout(location = 2) out vec3 fargNormalWorld;
+layout(location = 3) out vec2 fragUV;
+
 
 layout(push_constant) uniform Push{
 	mat4 modelMatrix; // stores porjection * view * model
@@ -50,5 +52,6 @@ void main(){
 	fargNormalWorld = normalize(mat3(push.normalMatrix) * normal);
 	fragPosWorld = positionWorld.xyz;
 	fragColor = color;
+	fragUV = uv;
 	
 }
