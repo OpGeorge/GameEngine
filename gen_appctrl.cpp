@@ -30,6 +30,7 @@ namespace gen {
 			.setMaxSets(GenSwapChain::MAX_FRAMES_IN_FLIGHT)
 			.addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, GenSwapChain::MAX_FRAMES_IN_FLIGHT)
 			.build();
+
 		loadGameObjects();
 	
 
@@ -80,6 +81,8 @@ namespace gen {
 
 		auto viewerObject = GenGameObject::createGameObject();
 		viewerObject.transform.translation.z = -2.5f;
+
+
 		KeyboardMovementController cameraController{};
 
 		

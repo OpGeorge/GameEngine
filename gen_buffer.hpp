@@ -1,4 +1,4 @@
-#pragma once
+
 #pragma once
 
 #include "gen_device.hpp"
