@@ -85,7 +85,7 @@ namespace gen {
 	}
 
 
-	void SimpleRenderSystem::renderGameObjcets(FrameInfo &frameInfo) {
+	void SimpleRenderSystem::renderGameObjects(FrameInfo &frameInfo) {
 
 		genPipeline->bind(frameInfo.commandBuffer);
 

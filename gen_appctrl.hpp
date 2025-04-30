@@ -8,11 +8,6 @@
 
 #include "gen_descriptors.hpp"
 
-
-
-
-
-
 #include <memory>
 #include <vector>
 
@@ -38,10 +33,6 @@ namespace gen {
 
 		void loadGameObjects();
 	
-
-
-
-
 		GenWindow genWindow{ WIDTH,HEIGHT,"HELLO VULKAN ENGINE!" };
 
 		GenDevice genDevice{ genWindow };
