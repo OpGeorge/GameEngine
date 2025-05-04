@@ -97,7 +97,27 @@ namespace gen {
 		pipelineInfo.pViewportState = &configInfo.viewportInfo;
 		pipelineInfo.pRasterizationState = &configInfo.rasterizationInfo;
 		pipelineInfo.pMultisampleState = &configInfo.multisampleInfo;
-		pipelineInfo.pColorBlendState = &configInfo.colorBlendInfo;
+
+
+		VkPipelineColorBlendStateCreateInfo noColorBlendInfo{};
+		VkPipelineColorBlendAttachmentState noColorAttachment{};
+
+		if (!configInfo.hasColorAttachment) {
+			noColorAttachment.colorWriteMask = 0;
+			noColorAttachment.blendEnable = VK_FALSE;
+
+			noColorBlendInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+			noColorBlendInfo.logicOpEnable = VK_FALSE;
+			noColorBlendInfo.attachmentCount = 1;
+			noColorBlendInfo.pAttachments = &noColorAttachment;
+
+			pipelineInfo.pColorBlendState = &noColorBlendInfo;
+		}
+		else {
+			pipelineInfo.pColorBlendState = &configInfo.colorBlendInfo;
+		}
+
+
 		pipelineInfo.pDepthStencilState = &configInfo.depthStencilInfo;
 		pipelineInfo.pDynamicState = &configInfo.dynamicStateInfo;
 
