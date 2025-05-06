@@ -14,7 +14,7 @@ namespace gen {
     class SimpleShadowRenderSystem {
     public:
         SimpleShadowRenderSystem(GenDevice& device, VkRenderPass shadowRenderPass);
-        ~SimpleShadowRenderSystem() = default;
+        ~SimpleShadowRenderSystem();
 
         SimpleShadowRenderSystem(const SimpleShadowRenderSystem&) = delete;
         SimpleShadowRenderSystem& operator=(const SimpleShadowRenderSystem&) = delete;

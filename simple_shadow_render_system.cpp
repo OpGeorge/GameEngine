@@ -18,6 +18,10 @@ namespace gen {
         createPipeline(shadowRenderPass);
     }
 
+    SimpleShadowRenderSystem::~SimpleShadowRenderSystem() {
+        vkDestroyPipelineLayout(genDevice.device(), pipelineLayout, nullptr);
+    }
+
     void SimpleShadowRenderSystem::createPipelineLayout() {
         VkPushConstantRange pushConstantRange{};
         pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
