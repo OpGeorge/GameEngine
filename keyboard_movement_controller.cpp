@@ -1,4 +1,5 @@
 #include "keyboard_movement_controller.hpp"
+#include <iostream>
 
 namespace gen {
 
@@ -84,6 +85,43 @@ namespace gen {
 		}
 
 
+	}
+
+
+	void KeyboardMovementController::processMouseLookToggle(GLFWwindow* window) {
+		bool isTogglePressed = glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS;
+		if (isTogglePressed && !lastToggleState) {
+			mouseLookEnabled = !mouseLookEnabled;
+
+			if (mouseLookEnabled) {
+				glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+				glfwGetCursorPos(window, &lastMouseX, &lastMouseY);  // reset reference point
+			}
+			else {
+				glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+			}
+		}
+		lastToggleState = isTogglePressed;
+	}
+
+	void KeyboardMovementController::updateCameraViewFromMouse(GLFWwindow* window, GenGameObject& cameraObject) {
+		if (!mouseLookEnabled) return;
+
+		double mouseX, mouseY;
+		glfwGetCursorPos(window, &mouseX, &mouseY);
+
+		std::cout << "Pos X Y : " << mouseX << " " << mouseY << "\n";
+
+		double deltaX = mouseX - lastMouseX;
+		double deltaY = mouseY - lastMouseY;
+		lastMouseX = mouseX;
+		lastMouseY = mouseY;
+
+		cameraObject.transform.rotation.y += static_cast<float>(deltaX) * mouseSensitivity;
+		cameraObject.transform.rotation.x -= static_cast<float>(deltaY) * mouseSensitivity;
+
+		
+		cameraObject.transform.rotation.x = glm::clamp(cameraObject.transform.rotation.x, -1.5f, 1.5f);
 	}
 
 }
