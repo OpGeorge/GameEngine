@@ -21,6 +21,14 @@ namespace gen {
 		glm::mat3 normalMatrix();
 	};
 
+	enum class ObjectType {
+		Generic,
+		Camera,
+		Light,
+		Player,
+		Projectile
+	};
+
 
 	struct PointLightComponent {
 
@@ -61,6 +69,8 @@ namespace gen {
 		std::unique_ptr<PointLightComponent> pointLight = nullptr;
 
 		std::shared_ptr<GenTexture> texture{};
+
+		ObjectType type = ObjectType::Generic;
 
 	private:
 		GenGameObject(id_t objId) : id{ objId } {}
