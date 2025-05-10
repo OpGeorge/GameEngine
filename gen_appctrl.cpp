@@ -126,6 +126,9 @@ namespace gen {
             currentTime = newTime;
             frameTime = glm::min(frameTime, MAX_FRAME_TIME);
 
+            cameraController.processMouseLookToggle(genWindow.getGLFWwindow());
+            cameraController.updateCameraViewFromMouse(genWindow.getGLFWwindow(), viewerObject);
+
             cameraController.moveInPlaneXZ(genWindow.getGLFWwindow(), frameTime, viewerObject);
             camera.setViewYXZ(viewerObject.transform.translation, viewerObject.transform.rotation);
 

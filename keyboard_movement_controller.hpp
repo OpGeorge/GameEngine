@@ -20,6 +20,7 @@ namespace gen {
                 int lookRight = GLFW_KEY_RIGHT;
                 int lookUp = GLFW_KEY_UP;
                 int lookDown = GLFW_KEY_DOWN;
+                int toggleMouseCrosshair = GLFW_KEY_V;
             };
 
 
@@ -27,8 +28,14 @@ namespace gen {
 
             float moveSpeed{ 3.5f };
             float lookSpeed{ 1.5f };
+            bool mouseLookEnabled = false;
+            bool lastToggleState = false;
+            double lastMouseX = 0.0, lastMouseY = 0.0;
+            float mouseSensitivity = 0.002f;
 
 
+            void processMouseLookToggle(GLFWwindow* window);
+            void updateCameraViewFromMouse(GLFWwindow* window, GenGameObject& cameraObject);
             void moveInPlaneXZ(GLFWwindow* window, float dt, GenGameObject & gameObject);
 
 	};
