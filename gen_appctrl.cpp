@@ -110,10 +110,39 @@ namespace gen {
 
         GenCamera camera{};
         camera.setViewDirection(glm::vec3(0.0f, -0.5f, 0.0f), glm::vec3(0.0f, 0.0f, 2.5f));
+       
         auto currentTime = std::chrono::high_resolution_clock::now();
 
         auto viewerObject = GenGameObject::createGameObject();
         viewerObject.transform.translation.z = -2.5f;
+        viewerObject.transform.translation.y = -.5f;
+
+        /// multiple cameras initializations
+
+        std::vector<GenGameObject> cameraStand;
+        {
+            auto cam1 = GenGameObject::createGameObject();
+            cam1.type = ObjectType::Camera;
+            cam1.transform.translation = { 0.f, -0.3f, 1.f };
+
+
+            auto cam2 = GenGameObject::createGameObject();
+            cam2.type = ObjectType::Camera;
+            cam2.transform.translation = { 0.f, -.3f, -2.5f };
+            cam2.transform.rotation = { 0.f, -glm::radians(10.f), 0.f };
+
+            auto cam3 = GenGameObject::createGameObject();
+            cam3.transform.translation = { -5.f, -.5f, -5.f };
+            cam3.type = ObjectType::Camera;
+            //cam3.transform.rotation = { glm::radians(-15.f), glm::radians(45.f), 0.f };
+
+            cameraStand.push_back(std::move(cam1));
+            cameraStand.push_back(std::move(cam2));
+            cameraStand.push_back(std::move(cam3));
+        }
+
+        int activeCameraIndex = 0;
+        
         KeyboardMovementController cameraController{};
 
         const float MAX_FRAME_TIME = 165.f;
@@ -121,19 +150,34 @@ namespace gen {
         while (!genWindow.shouldClose()) {
             glfwPollEvents();
 
+            static bool tabPressedLastFrame = false;
+            if (glfwGetKey(genWindow.getGLFWwindow(), GLFW_KEY_TAB) == GLFW_PRESS) {
+                if (!tabPressedLastFrame) {
+                    activeCameraIndex = (activeCameraIndex + 1) % cameraStand.size();
+                }
+                tabPressedLastFrame = true;
+            }
+            else {
+                tabPressedLastFrame = false;
+            }
+
             auto newTime = std::chrono::high_resolution_clock::now();
             float frameTime = std::chrono::duration<float>(newTime - currentTime).count();
             currentTime = newTime;
             frameTime = glm::min(frameTime, MAX_FRAME_TIME);
+            
 
+            // camera view and move logic and funcitons binding
             cameraController.processMouseLookToggle(genWindow.getGLFWwindow());
-            cameraController.updateCameraViewFromMouse(genWindow.getGLFWwindow(), viewerObject);
+            cameraController.updateCameraViewFromMouse(genWindow.getGLFWwindow(), cameraStand[activeCameraIndex]); 
 
-            cameraController.moveInPlaneXZ(genWindow.getGLFWwindow(), frameTime, viewerObject);
-            camera.setViewYXZ(viewerObject.transform.translation, viewerObject.transform.rotation);
+            cameraController.moveInPlaneXZ(genWindow.getGLFWwindow(), frameTime, cameraStand[activeCameraIndex]);
+            camera.setViewYXZ(cameraStand[activeCameraIndex].transform.translation, cameraStand[activeCameraIndex].transform.rotation);
 
             float aspect = genRenderer.getAspectratio();
             camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 10.f);
+
+            logicManager.update(frameTime, gameObjects);
 
             if (auto commandBuffer = genRenderer.beginFrame()) {
                 int frameIndex = genRenderer.getFrameIndex();
@@ -180,33 +224,34 @@ namespace gen {
 		auto smoothVase = GenGameObject::createGameObject();
 		smoothVase.model = genModel;
         smoothVase.texture = texture;
-		smoothVase.transform.translation = {-1.0f,.5f, 0.f};
+		smoothVase.transform.translation = {-1.0f,-2.0f, 0.f};
 		smoothVase.transform.scale = glm::vec3(3.f);
 		gameObjects.emplace(smoothVase.getId(),std::move(smoothVase));
 
 		genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/flat_vase.obj");
 		auto flatVase = GenGameObject::createGameObject();
 		flatVase.model = genModel;
-		flatVase.transform.translation = {1.f,.5f,0.f };
+		flatVase.transform.translation = {1.f,0.0f,0.f };
 		flatVase.transform.scale = glm::vec3(3.f);
 		gameObjects.emplace(flatVase.getId(), std::move(flatVase)); // make sure the move has a valid pointer and a not null obj
 
 		genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/colored_cube.obj");
 		auto coloredCube = GenGameObject::createGameObject();
 		coloredCube.model = genModel;
-		coloredCube.transform.translation = { 0.f,.0f,0.f };
+		coloredCube.transform.translation = { 0.f,-.5f,0.f };
 		coloredCube.transform.scale = glm::vec3(0.5f);
 		gameObjects.emplace(coloredCube.getId(),std::move(coloredCube));
 
 		genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/quad.obj");
 		auto surface = GenGameObject::createGameObject();
 		surface.model = genModel;
-		surface.transform.translation = { 0.f,.5f,0.f };
+		surface.transform.translation = { 0.f,0.0f,0.f };
 		surface.transform.scale = glm::vec3(3.f);
 		gameObjects.emplace(surface.getId(),std::move(surface));
 
-		{
+		{ // lumina alba din cub
 			auto pointLight = GenGameObject::makePointLight(0.2f);
+            pointLight.transform.translation = glm::vec3{ .0f,-.5f,.0f };
 			gameObjects.emplace(pointLight.getId(), std::move(pointLight));
 		}
 
@@ -224,6 +269,7 @@ namespace gen {
 
 		for (int i = 0; i < lightColors.size(); i++) {
 			auto pointLight = GenGameObject::makePointLight(0.2f);
+            pointLight.type = ObjectType::Light;
 			pointLight.color = lightColors[i];
 			auto rotateLight = glm::rotate(glm::mat4(1.f), (i * glm::two_pi<float>()) / lightColors.size(), { 0.f,-1.f,0.f });
 			pointLight.transform.translation = glm::vec3(rotateLight * glm::vec4(-1.f, -1.f, -1.f, 1.f));

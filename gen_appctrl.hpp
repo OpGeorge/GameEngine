@@ -7,6 +7,7 @@
 #include "gen_window.hpp"
 
 #include "gen_descriptors.hpp"
+#include "gen_logic_manager.hpp"
 
 #include <memory>
 #include <vector>
@@ -42,6 +43,8 @@ namespace gen {
 		std::unique_ptr<GenDescriptorPool> globalPool{};
 
 		GenGameObject::Map gameObjects;
+
+		GenLogicManager logicManager;
 
 
 	};

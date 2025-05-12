@@ -84,6 +84,10 @@ namespace gen {
 
 		}
 
+		if (gameObject.transform.translation.y > 0.f) {
+			gameObject.transform.translation.y = 0.f;
+		}
+
 
 	}
 
@@ -110,7 +114,7 @@ namespace gen {
 		double mouseX, mouseY;
 		glfwGetCursorPos(window, &mouseX, &mouseY);
 
-		std::cout << "Pos X Y : " << mouseX << " " << mouseY << "\n";
+		//std::cout << "Pos X Y : " << mouseX << " " << mouseY << "\n";
 
 		double deltaX = mouseX - lastMouseX;
 		double deltaY = mouseY - lastMouseY;
