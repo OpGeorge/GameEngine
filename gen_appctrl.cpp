@@ -249,6 +249,12 @@ namespace gen {
 		surface.transform.scale = glm::vec3(3.f);
 		gameObjects.emplace(surface.getId(),std::move(surface));
 
+        genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/sphere.obj");
+        auto sphere = GenGameObject::createGameObject();
+        sphere.model = genModel;
+        sphere.transform.translation = { 1.f,.0f,1.f };
+        sphere.transform.scale = glm::vec3(.1f);
+        gameObjects.emplace(sphere.getId(), std::move(sphere));
 		{ // lumina alba din cub
 			auto pointLight = GenGameObject::makePointLight(0.2f);
             pointLight.transform.translation = glm::vec3{ .0f,-.5f,.0f };
