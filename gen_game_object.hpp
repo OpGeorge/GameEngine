@@ -26,7 +26,8 @@ namespace gen {
 		Camera,
 		Light,
 		Player,
-		Projectile
+		Projectile,
+		Sphere
 	};
 
 
@@ -34,6 +35,18 @@ namespace gen {
 
 		float lightIntesity = 1.0f;
 
+	};
+
+	struct SoundSphereComponent {
+		float radius = 1.0f;         
+		bool visible = false;        
+		bool isAudibleProbe = false; 
+	};
+
+	struct SoundDiscComponent {
+		float radius = 1.0f;
+		bool visible = false;
+		bool isPlayerControlled = false;
 	};
 
 
@@ -67,7 +80,8 @@ namespace gen {
 		//Optional pointer components
 		std::shared_ptr<GenModel>model{};
 		std::unique_ptr<PointLightComponent> pointLight = nullptr;
-
+		std::unique_ptr<SoundSphereComponent> soundSphere = nullptr;
+		std::unique_ptr<SoundDiscComponent> soundDisc = nullptr;
 		std::shared_ptr<GenTexture> texture{};
 
 		ObjectType type = ObjectType::Generic;
