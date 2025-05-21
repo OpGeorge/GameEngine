@@ -1,18 +1,22 @@
 #include "gen_appctrl.hpp"
-#include "gen_buffer.hpp"
 
-#include "wireframe_render_system.hpp"
+#include "coreV/gen_buffer.hpp"
+#include "coreV/wireframe_render_system.hpp"
+#include "coreV/simple_render_system.hpp"
+#include "coreV/point_light_system.hpp"
+
 #include "gen_camera.hpp"
-#include "simple_render_system.hpp"
-#include "point_light_system.hpp"
 #include "keyboard_movement_controller.hpp"
-#include "skybox_render_system.hpp"
+#include "gen_obj_movement.hpp"
+#include "gen_npc_controller.hpp"
+
 
 #define GLM_FORCE_RADIENTS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
 #include <vector>
+#include <iostream>
 
 #include <stdexcept>
 #include <array>
@@ -22,26 +26,21 @@
 
 namespace gen {
 
-
+  
 
 
 	AppCtrl::AppCtrl() {
 
         loadGameObjects();
 
-      
-
         const int maxObjects = static_cast<int>(gameObjects.size()) + 10;  // Add padding
+
         globalPool = GenDescriptorPool::Builder(genDevice)
             .setMaxSets(GenSwapChain::MAX_FRAMES_IN_FLIGHT * maxObjects)
 			.addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, GenSwapChain::MAX_FRAMES_IN_FLIGHT * maxObjects)
             .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, GenSwapChain::MAX_FRAMES_IN_FLIGHT * maxObjects)
 			.build();
 
-		
-	
-
-	
 	}
 
 	AppCtrl::~AppCtrl() {
@@ -72,6 +71,8 @@ namespace gen {
             .addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
             .addBinding(2, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT)
             .build();
+
+ 
 
         std::vector<VkDescriptorSet> globalDescriptorSets(GenSwapChain::MAX_FRAMES_IN_FLIGHT);
         std::array<std::unordered_map<GenGameObject::id_t, VkDescriptorSet>, GenSwapChain::MAX_FRAMES_IN_FLIGHT> objectDescriptorSets;
@@ -161,6 +162,8 @@ namespace gen {
             globalSetLayout->getDescriptorSetLayout()
         };
 
+
+
         GenCamera camera{};
         camera.setViewDirection(glm::vec3(0.0f, -0.5f, 0.0f), glm::vec3(0.0f, 0.0f, 2.5f));
 
@@ -190,6 +193,16 @@ namespace gen {
             cameraStand.push_back(std::move(cam3));
         }
 
+        std::vector<GenGameObject*> controllableObjects;
+
+        for (auto& [id, obj] : gameObjects) {
+            if (obj.type == ObjectType::Player || obj.type == ObjectType::Sphere) {
+                controllableObjects.push_back(&obj);
+            }
+        }
+       
+        GameObjectMovementController objectController;
+ 
         int activeCameraIndex = 0;
         KeyboardMovementController cameraController{};
         const float MAX_FRAME_TIME = 165.f;
@@ -222,6 +235,25 @@ namespace gen {
             camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 10.f);
 
             logicManager.update(frameTime, gameObjects);
+
+            int activeObjectIndex = 0;
+            static bool switchPressedLastFrame = false;
+            if (glfwGetKey(genWindow.getGLFWwindow(), GLFW_KEY_C) == GLFW_PRESS) {
+                if (!switchPressedLastFrame) {
+                    activeObjectIndex = (activeObjectIndex + 1) % controllableObjects.size();
+                    std::cout << "Now controlling object index: " << activeObjectIndex << "\n";
+                }
+                switchPressedLastFrame = true;
+            }
+            else {
+                switchPressedLastFrame = false;
+            }
+            if (!controllableObjects.empty()) {
+                GenGameObject* activeObj = controllableObjects[activeObjectIndex];
+                objectController.moveInPlaneXZ(genWindow.getGLFWwindow(), frameTime, *activeObj);
+            }
+
+
 
             if (auto commandBuffer = genRenderer.beginFrame()) {
                 int frameIndex = genRenderer.getFrameIndex();
@@ -259,14 +291,12 @@ namespace gen {
         vkDeviceWaitIdle(genDevice.device());
     }
 
-
-
 	void AppCtrl::loadGameObjects() {
 
 
 
         std::shared_ptr<GenTexture> texture = std::make_shared<GenTexture>(genDevice, "textures/vaseTexture.png");
-	
+
 		std::shared_ptr<GenModel> genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/smooth_vase.obj");
 		auto smoothVase = GenGameObject::createGameObject();
 		smoothVase.model = genModel;
@@ -287,6 +317,7 @@ namespace gen {
 		flatVase.model = genModel;
 		flatVase.transform.translation = {1.f,0.0f,0.f };
 		flatVase.transform.scale = glm::vec3(3.f);
+        flatVase.type = ObjectType::NPC;
 		gameObjects.emplace(flatVase.getId(), std::move(flatVase)); // make sure the move has a valid pointer and a not null obj
 
 		genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/colored_cube.obj");
@@ -317,16 +348,11 @@ namespace gen {
         gameObjects.emplace(sphere.getId(), std::move(sphere));
 
 
-
-
-		{ // lumina alba din cub
-			auto pointLight = GenGameObject::makePointLight(0.2f);
+        { // lumina alba din cub
+            auto pointLight = GenGameObject::makePointLight(0.2f);
             pointLight.transform.translation = glm::vec3{ .0f,-.5f,.0f };
-			gameObjects.emplace(pointLight.getId(), std::move(pointLight));
-		}
-
-      
-        
+            gameObjects.emplace(pointLight.getId(), std::move(pointLight));
+        }
 
 		std::vector<glm::vec3> lightColors{
 			{1.f, .1f, .1f},
@@ -347,9 +373,4 @@ namespace gen {
 		}
 
 	}
-
-	
-	
-
-	
 }

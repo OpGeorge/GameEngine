@@ -39,10 +39,6 @@ layout(push_constant) uniform Push{
 
 }push;
 
-
-
-
-
 void main(){
 
 	vec4 positionWorld = push.modelMatrix * vec4(position,1.0);

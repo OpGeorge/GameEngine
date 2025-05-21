@@ -1,7 +1,7 @@
 #pragma once
 
-#include "gen_model.hpp"
-#include "gen_texture.hpp"
+#include "coreV/gen_model.hpp"
+#include "coreV/gen_texture.hpp"
 
 #include<glm/gtc/matrix_transform.hpp>
 #include <memory>
@@ -26,7 +26,7 @@ namespace gen {
 		Camera,
 		Light,
 		Player,
-		Projectile,
+		NPC,
 		Sphere
 	};
 

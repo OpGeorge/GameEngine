@@ -1,12 +1,12 @@
 #pragma once
 
-#include "gen_device.hpp"
+#include "coreV/gen_device.hpp"
 #include "gen_game_object.hpp"
 
-#include "gen_renderer.hpp"
-#include "gen_window.hpp"
+#include "coreV/gen_renderer.hpp"
+#include "coreV/gen_window.hpp"
 
-#include "gen_descriptors.hpp"
+#include "coreV/gen_descriptors.hpp"
 #include "gen_logic_manager.hpp"
 
 #include <memory>
@@ -46,6 +46,7 @@ namespace gen {
 
 		GenLogicManager logicManager;
 
+		
 
 	};
 }

@@ -26,7 +26,7 @@ namespace gen {
 
             for (auto& [otherId, target] : gameObjects) {
                 if (id == otherId) continue;
-                if (!target.soundDisc) continue;  // critical check
+                if (!target.soundDisc) continue;  
 
                 glm::vec2 targetPos = { target.transform.translation.x, target.transform.translation.z };
                 float dist = glm::length(center - targetPos);
