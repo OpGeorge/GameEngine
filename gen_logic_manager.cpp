@@ -11,7 +11,7 @@ namespace gen {
                 obj.type != ObjectType::Sphere &&
                 obj.transform.translation.y < 0.f) {
                
-                obj.transform.translation.y += 0.3f * dt;
+                obj.transform.translation.y += 0.3f * dt; // gravity effect
                 
             }
             
@@ -19,7 +19,7 @@ namespace gen {
                 obj.transform.translation.y = 0.f;
             }
 
-            if (!obj.soundDisc) continue;  // make sure the source has a disc
+            if (!obj.soundDisc) continue;  
 
             glm::vec2 center = { obj.transform.translation.x, obj.transform.translation.z };
             float radius = obj.soundDisc->radius;

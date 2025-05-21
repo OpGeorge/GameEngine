@@ -77,7 +77,7 @@ namespace gen {
 
         for (auto& [id, obj] : frameInfo.gameObjcets) {
             if (!obj.model) continue;
-            if (!obj.soundSphere || !obj.soundSphere->visible) continue;
+            if (!obj.soundDisc || !obj.soundDisc->visible) continue;
 
             SimplePushConstantData push{};
             push.modelMatrix = obj.transform.mat4();

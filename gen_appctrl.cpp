@@ -2,14 +2,11 @@
 #include "gen_buffer.hpp"
 
 #include "wireframe_render_system.hpp"
-
-
 #include "gen_camera.hpp"
 #include "simple_render_system.hpp"
 #include "point_light_system.hpp"
 #include "keyboard_movement_controller.hpp"
-
-
+#include "skybox_render_system.hpp"
 
 #define GLM_FORCE_RADIENTS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -31,6 +28,8 @@ namespace gen {
 	AppCtrl::AppCtrl() {
 
         loadGameObjects();
+
+      
 
         const int maxObjects = static_cast<int>(gameObjects.size()) + 10;  // Add padding
         globalPool = GenDescriptorPool::Builder(genDevice)
@@ -247,9 +246,11 @@ namespace gen {
                 uboBuffers[frameIndex]->flush();
 
                 genRenderer.beginSwachChainRenderPass(commandBuffer);
+
                 simpleRenderSystem.renderGameObjects(frameInfo);
-                wireframeRenderSystem.render(frameInfo);
                 pointLightSystem.render(frameInfo);
+                wireframeRenderSystem.render(frameInfo);
+                
                 genRenderer.endSwachChainRenderPass(commandBuffer);
                 genRenderer.endFrame();
             }
@@ -310,7 +311,7 @@ namespace gen {
         sphere.soundDisc->radius = .5f;
         sphere.soundDisc->visible = true;
         sphere.soundDisc->isPlayerControlled = true;
-        sphere.transform.translation = { -1.f,-0.5f,-1.f };
+        sphere.transform.translation = { -1.f,-0.5f,-2.5f };
         sphere.transform.scale = glm::vec3(.1f);
         sphere.type = ObjectType::Sphere;
         gameObjects.emplace(sphere.getId(), std::move(sphere));
