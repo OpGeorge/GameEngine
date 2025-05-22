@@ -35,6 +35,8 @@ namespace gen {
 
         VkDescriptorSetLayout getDescriptorSetLayout() const { return descriptorSetLayout; }
 
+       
+
     private:
         GenDevice& genDevice;
         VkDescriptorSetLayout descriptorSetLayout;
@@ -71,12 +73,18 @@ namespace gen {
         GenDescriptorPool(const GenDescriptorPool&) = delete;
         GenDescriptorPool& operator=(const GenDescriptorPool&) = delete;
 
+        bool tryAllocateDescriptor(
+            const VkDescriptorSetLayout descriptorSetLayout,
+            VkDescriptorSet& descriptor) const;
+
         bool allocateDescriptor(
             const VkDescriptorSetLayout descriptorSetLayout, VkDescriptorSet& descriptor) const;
 
         void freeDescriptors(std::vector<VkDescriptorSet>& descriptors) const;
 
         void resetPool();
+
+     
 
     private:
         GenDevice& genDevice;
