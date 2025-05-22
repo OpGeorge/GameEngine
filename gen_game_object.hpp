@@ -56,6 +56,7 @@ namespace gen {
 		using id_t = unsigned int;
 		using Map = std::unordered_map<id_t, GenGameObject>;
 
+
 		static GenGameObject createGameObject() {
 			static id_t currentId = 0;
 			return GenGameObject{ currentId++ };
@@ -82,6 +83,7 @@ namespace gen {
 		std::unique_ptr<PointLightComponent> pointLight = nullptr;
 		std::unique_ptr<SoundSphereComponent> soundSphere = nullptr;
 		std::unique_ptr<SoundDiscComponent> soundDisc = nullptr;
+		bool textureDirty = false;
 		std::shared_ptr<GenTexture> texture{};
 
 		ObjectType type = ObjectType::Generic;

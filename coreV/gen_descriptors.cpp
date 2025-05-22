@@ -177,9 +177,9 @@ namespace gen {
     }
 
     bool GenDescriptorWriter::build(VkDescriptorSet& set) {
-        bool success = pool.allocateDescriptor(setLayout.getDescriptorSetLayout(), set);
+        bool success = pool.tryAllocateDescriptor(setLayout.getDescriptorSetLayout(), set);
         if (!success) {
-            return false;
+            return false; // let caller handle it (e.g. recreate pool or retry)
         }
         overwrite(set);
         return true;
@@ -192,4 +192,17 @@ namespace gen {
         vkUpdateDescriptorSets(pool.genDevice.device(), writes.size(), writes.data(), 0, nullptr);
     }
 
+
+    bool GenDescriptorPool::tryAllocateDescriptor(
+        const VkDescriptorSetLayout descriptorSetLayout,
+        VkDescriptorSet& descriptor) const {
+
+        VkDescriptorSetAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        allocInfo.descriptorPool = descriptorPool;
+        allocInfo.pSetLayouts = &descriptorSetLayout;
+        allocInfo.descriptorSetCount = 1;
+
+        return vkAllocateDescriptorSets(genDevice.device(), &allocInfo, &descriptor) == VK_SUCCESS;
+    }
 }

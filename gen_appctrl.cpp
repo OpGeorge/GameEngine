@@ -4,11 +4,13 @@
 #include "coreV/wireframe_render_system.hpp"
 #include "coreV/simple_render_system.hpp"
 #include "coreV/point_light_system.hpp"
+#include "coreV/gen_texture_swapper.hpp"
 
 #include "gen_camera.hpp"
 #include "keyboard_movement_controller.hpp"
 #include "gen_obj_movement.hpp"
 #include "gen_npc_controller.hpp"
+
 
 
 #define GLM_FORCE_RADIENTS
@@ -17,6 +19,9 @@
 #include <glm/gtc/constants.hpp>
 #include <vector>
 #include <iostream>
+#include <queue>
+
+
 
 #include <stdexcept>
 #include <array>
@@ -50,6 +55,14 @@ namespace gen {
 
     void AppCtrl::run() {
         std::shared_ptr<GenTexture> fallbackTexture = std::make_shared<GenTexture>(genDevice, "textures/white.png");
+
+        bool textureSwapPending = false;
+        std::string pendingTexturePath;
+
+        std::queue<std::tuple<int, GenGameObject*, std::shared_ptr<GenTexture>, std::shared_ptr<GenTexture>>> pendingTextureSwaps;
+        std::queue<std::pair<int, std::shared_ptr<GenTexture>>> textureGarbageQueue;
+
+        int currentFrameNumber = 0;
 
         std::vector<std::unique_ptr<GenBuffer>> uboBuffers(GenSwapChain::MAX_FRAMES_IN_FLIGHT);
         std::unordered_map<GenGameObject::id_t, std::vector<std::unique_ptr<GenBuffer>>> textureToggleBuffers;
@@ -85,23 +98,12 @@ namespace gen {
                 VkDescriptorBufferInfo uboInfo = uboBuffers[frameIndex]->descriptorInfo();
 
                 // Texture binding logic
-                int useTextureFlag = 1;
-                bool bindTexture = true;
-                VkDescriptorImageInfo imageInfo{};
+                const bool hasRealTexture = obj.texture != nullptr;
+                VkDescriptorImageInfo imageInfo = hasRealTexture
+                    ? obj.texture->descriptorInfo()
+                    : fallbackTexture->descriptorInfo();
 
-                if (obj.texture) {
-                    imageInfo = obj.texture->descriptorInfo();
-                    useTextureFlag = 1;
-                }
-                else if (obj.soundSphere) {
-                    
-                    imageInfo = fallbackTexture->descriptorInfo();
-                    useTextureFlag = 0;
-                }
-                else {
-                    imageInfo = fallbackTexture->descriptorInfo();
-                    useTextureFlag = 1;
-                }
+                int useTextureFlag = hasRealTexture ? 1 : 0;
 
                 // Allocate per-object texture toggle buffer if needed
                 if (textureToggleBuffers.find(id) == textureToggleBuffers.end()) {
@@ -133,16 +135,42 @@ namespace gen {
                     .writeBuffer(2, &flagInfo);        // tell shader whether to sample
 
                 if (!writer.build(descriptorSet)) {
-                    throw std::runtime_error("Failed to allocate descriptor set");
+                    std::cerr << "Descriptor set allocation failed. Pool may be exhausted.\n";
+
+                    // Safely destroy old pool and build a new one
+                    globalPool = GenDescriptorPool::Builder(genDevice)
+                        .setMaxSets(1000)  // or increase this number
+                        .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000)
+                        .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000)
+                        .build();
+
+                    auto retryWriter = GenDescriptorWriter(*globalSetLayout, *globalPool)
+                        .writeBuffer(0, &uboInfo)
+                        .writeImage(1, &imageInfo)
+                        .writeBuffer(2, &flagInfo);
+
+                    if (!retryWriter.build(descriptorSet)) {
+                        throw std::runtime_error("Failed to rebuild descriptor set even after pool reset");
+                    }
                 }
 
                 objectDescriptorSets[frameIndex][id] = descriptorSet;
+
+               
 
                 if (globalDescriptorSets[frameIndex] == VK_NULL_HANDLE) {
                     globalDescriptorSets[frameIndex] = descriptorSet;
                 }
             }
         }
+
+        TextureSwapper textureSwapper(
+            genDevice,
+            *globalSetLayout,
+            *globalPool,
+            uboBuffers,
+            textureToggleBuffers,
+            objectDescriptorSets);
 
         SimpleRenderSystem simpleRenderSystem{
             genDevice,
@@ -194,16 +222,28 @@ namespace gen {
         }
 
         std::vector<GenGameObject*> controllableObjects;
+        std::vector<GenGameObject*> controllableNPCs;
 
         for (auto& [id, obj] : gameObjects) {
             if (obj.type == ObjectType::Player || obj.type == ObjectType::Sphere) {
                 controllableObjects.push_back(&obj);
+                std::cout << controllableObjects.size() << "\n";
+            }
+            if (obj.type == ObjectType::NPC) {
+                controllableNPCs.push_back(&obj);
             }
         }
        
         GameObjectMovementController objectController;
  
+
+        //test harcoded target
+        static glm::vec3 target = { 2.0f,0.0f,-3.0f };
+        NPCMovementController npcController;
+
+
         int activeCameraIndex = 0;
+        int activeObjectIndex = 0;
         KeyboardMovementController cameraController{};
         const float MAX_FRAME_TIME = 165.f;
 
@@ -236,11 +276,16 @@ namespace gen {
 
             logicManager.update(frameTime, gameObjects);
 
-            int activeObjectIndex = 0;
+            npcController.moveToTarget(frameTime, *controllableNPCs[0], target, 0.5f);
+
+            
             static bool switchPressedLastFrame = false;
             if (glfwGetKey(genWindow.getGLFWwindow(), GLFW_KEY_C) == GLFW_PRESS) {
+                
                 if (!switchPressedLastFrame) {
-                    activeObjectIndex = (activeObjectIndex + 1) % controllableObjects.size();
+                    
+                    
+                    activeObjectIndex = (activeObjectIndex +1) % controllableObjects.size();
                     std::cout << "Now controlling object index: " << activeObjectIndex << "\n";
                 }
                 switchPressedLastFrame = true;
@@ -248,14 +293,37 @@ namespace gen {
             else {
                 switchPressedLastFrame = false;
             }
+
+            static bool textureSwapPressedLastFrame = false;
+
+            if (glfwGetKey(genWindow.getGLFWwindow(), GLFW_KEY_T) == GLFW_PRESS) {
+                if (!textureSwapPressedLastFrame && !controllableObjects.empty()) {
+                    GenGameObject* activeObj = controllableObjects[activeObjectIndex];
+                    auto newTex = getCachedTexture("textures/red.png");
+                    if (activeObj->texture != newTex) {
+                        pendingTextureSwaps.push({ currentFrameNumber, activeObj, newTex, activeObj->texture });
+                        std::cout << "[DELAYED] Queued texture change for object " << activeObj->getId() << "\n";
+                    }
+                }
+                textureSwapPressedLastFrame = true;
+            }
+            else {
+                textureSwapPressedLastFrame = false;
+            }
+
             if (!controllableObjects.empty()) {
                 GenGameObject* activeObj = controllableObjects[activeObjectIndex];
                 objectController.moveInPlaneXZ(genWindow.getGLFWwindow(), frameTime, *activeObj);
+
+                
+
             }
+            
 
 
-
+            
             if (auto commandBuffer = genRenderer.beginFrame()) {
+                
                 int frameIndex = genRenderer.getFrameIndex();
 
                 FrameInfo frameInfo{
@@ -267,6 +335,8 @@ namespace gen {
                     objectDescriptorSets[frameIndex],
                     gameObjects
                 };
+
+              
 
                 GlobalUbo ubo{};
                 ubo.projection = camera.getProjcetion();
@@ -285,6 +355,46 @@ namespace gen {
                 
                 genRenderer.endSwachChainRenderPass(commandBuffer);
                 genRenderer.endFrame();
+
+                currentFrameNumber++;
+
+                while (!pendingTextureSwaps.empty()) {
+                    auto [frameAssigned, objPtr, newTex, oldTex] = pendingTextureSwaps.front();
+                    if (currentFrameNumber - frameAssigned >= GenSwapChain::MAX_FRAMES_IN_FLIGHT * 2) {
+                        // Delay passed — apply new texture safely
+                        if (objPtr->texture) {
+                            // optional: garbage collect old texture
+                        }
+                        objPtr->texture = newTex;
+                        objPtr->textureDirty = true;
+                        textureGarbageQueue.push({ currentFrameNumber, oldTex });
+                        pendingTextureSwaps.pop();
+                        std::cout << "[SAFE] Applied texture change to object " << objPtr->getId() << "\n";
+                    }
+                    else {
+                        break; // Wait more
+                    }
+                }
+                while (!textureGarbageQueue.empty()) {
+                    const auto& [frameAssigned, tex] = textureGarbageQueue.front();
+                    if (currentFrameNumber - frameAssigned >= GenSwapChain::MAX_FRAMES_IN_FLIGHT + 2) {
+                        textureGarbageQueue.pop();  // Now it's safe to destroy
+                    }
+                    else {
+                        break;
+                    }
+                }
+
+
+                refreshObjectDescriptorsIfNeeded(
+                    fallbackTexture,
+                    uboBuffers,
+                    textureToggleBuffers,
+                    objectDescriptorSets,
+                    *globalSetLayout,
+                    *globalPool);
+            
+
             }
         }
 
@@ -373,4 +483,73 @@ namespace gen {
 		}
 
 	}
+
+
+    void AppCtrl::refreshObjectDescriptorsIfNeeded(
+        std::shared_ptr<GenTexture> fallbackTexture,
+        std::vector<std::unique_ptr<GenBuffer>>& uboBuffers,
+        std::unordered_map<GenGameObject::id_t, std::vector<std::unique_ptr<GenBuffer>>>& textureToggleBuffers,
+        std::array<std::unordered_map<GenGameObject::id_t, VkDescriptorSet>, GenSwapChain::MAX_FRAMES_IN_FLIGHT>& objectDescriptorSets,
+        GenDescriptorSetLayout& globalSetLayout,
+        GenDescriptorPool& globalPool
+    ) {
+        for (int i = 0; i < GenSwapChain::MAX_FRAMES_IN_FLIGHT; i++) {
+            for (auto& [id, obj] : gameObjects) {
+                if (!obj.textureDirty) continue;
+
+                VkDescriptorSet descriptorSet;
+                VkDescriptorBufferInfo uboInfo = uboBuffers[i]->descriptorInfo();
+
+                int useTextureFlag = obj.texture ? 1 : 0;
+                VkDescriptorImageInfo imageInfo = obj.texture
+                    ? obj.texture->descriptorInfo()
+                    : fallbackTexture->descriptorInfo();
+
+                if (textureToggleBuffers.find(id) == textureToggleBuffers.end()) {
+                    std::vector<std::unique_ptr<GenBuffer>> buffers;
+                    for (int j = 0; j < GenSwapChain::MAX_FRAMES_IN_FLIGHT; j++) {
+                        auto buffer = std::make_unique<GenBuffer>(
+                            genDevice,
+                            sizeof(int),
+                            1,
+                            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+                        );
+                        buffer->map();
+                        buffers.push_back(std::move(buffer));
+                    }
+                    textureToggleBuffers.emplace(id, std::move(buffers));
+                }
+
+                textureToggleBuffers[id][i]->writeToBuffer(&useTextureFlag);
+                VkDescriptorBufferInfo flagInfo = textureToggleBuffers[id][i]->descriptorInfo();
+
+                auto writer = GenDescriptorWriter(globalSetLayout, globalPool)
+                    .writeBuffer(0, &uboInfo)
+                    .writeImage(1, &imageInfo)
+                    .writeBuffer(2, &flagInfo);
+
+                if (!writer.build(descriptorSet)) {
+                    throw std::runtime_error("Failed to rebuild descriptor set");
+                }
+
+                objectDescriptorSets[i][id] = descriptorSet;
+            }
+        }
+
+        for (auto& [id, obj] : gameObjects) {
+            obj.textureDirty = false;
+        }
+    }
+
+    std::shared_ptr<GenTexture> AppCtrl::getCachedTexture(const std::string& path) {
+        auto it = textureCache.find(path);
+        if (it != textureCache.end()) {
+            return it->second;
+        }
+
+        auto newTexture = std::make_shared<GenTexture>(genDevice, path);
+        textureCache[path] = newTexture;
+        return newTexture;
+    }
 }

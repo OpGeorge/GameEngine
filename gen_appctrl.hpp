@@ -30,6 +30,15 @@ namespace gen {
 
 		void run();
 
+		void refreshObjectDescriptorsIfNeeded(std::shared_ptr<GenTexture> fallbackTexture,
+			std::vector<std::unique_ptr<GenBuffer>>& uboBuffers,
+			std::unordered_map<GenGameObject::id_t, std::vector<std::unique_ptr<GenBuffer>>>& textureToggleBuffers,
+			std::array<std::unordered_map<GenGameObject::id_t, VkDescriptorSet>, GenSwapChain::MAX_FRAMES_IN_FLIGHT>& objectDescriptorSets,
+			GenDescriptorSetLayout& globalSetLayout,
+			GenDescriptorPool& globalPool);
+
+		std::shared_ptr<GenTexture> getCachedTexture(const std::string& path);
+
 	private:
 
 		void loadGameObjects();
@@ -46,6 +55,7 @@ namespace gen {
 
 		GenLogicManager logicManager;
 
+		std::unordered_map<std::string, std::shared_ptr<GenTexture>> textureCache;
 		
 
 	};
