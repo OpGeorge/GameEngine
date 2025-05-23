@@ -13,6 +13,7 @@
 
 
 
+
 #define GLM_FORCE_RADIENTS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
@@ -225,7 +226,7 @@ namespace gen {
         std::vector<GenGameObject*> controllableNPCs;
 
         for (auto& [id, obj] : gameObjects) {
-            if (obj.type == ObjectType::Player || obj.type == ObjectType::Sphere) {
+            if (obj.type == ObjectType::Player) {
                 controllableObjects.push_back(&obj);
                 std::cout << controllableObjects.size() << "\n";
             }
@@ -313,18 +314,77 @@ namespace gen {
 
             if (!controllableObjects.empty()) {
                 GenGameObject* activeObj = controllableObjects[activeObjectIndex];
+
+                // Always move the object
                 objectController.moveInPlaneXZ(genWindow.getGLFWwindow(), frameTime, *activeObj);
 
-                
+                // Only allow Player-type to emit sound and trigger propagation
+                if (activeObj->type == ObjectType::Player) {
+                    updateNodeColorAndTextureFromPlayer(
+                        *activeObj,
+                        gameObjects,
+                        getCachedTexture("textures/red.png"),
+                        getCachedTexture("textures/orange.png"),
+                        getCachedTexture("textures/green.png"),
+                        currentFrameNumber,
+                        pendingTextureSwaps
+                    );
 
+                    for (auto& [id, obj] : gameObjects) {
+                        if (obj.type != ObjectType::Node || !obj.node || !obj.node->activated) continue;
+                        if (!obj.node->hasPropagated &&  obj.node->color == NodeComponent::NodeColor::Red ||
+                            obj.node->color == NodeComponent::NodeColor::Orange) {
+                            propagationSystem.propagateFromNode(
+                                obj,
+                                gameObjects,
+                                3.5f,
+                                getCachedTexture("textures/orange.png"),
+                                getCachedTexture("textures/green.png"),
+                                currentFrameNumber,
+                                pendingTextureSwaps
+                            );
+
+                            obj.node->hasPropagated = true;
+
+                        }
+                    }
+                }
             }
-            
-
-
+           
             
             if (auto commandBuffer = genRenderer.beginFrame()) {
                 
                 int frameIndex = genRenderer.getFrameIndex();
+
+                while (!pendingTextureSwaps.empty()) {
+                    auto [frameAssigned, objPtr, newTex, oldTex] = pendingTextureSwaps.front();
+                    if (currentFrameNumber - frameAssigned >= GenSwapChain::MAX_FRAMES_IN_FLIGHT * 2) {
+                        textureSwapper.swapTexture(*objPtr, newTex, frameIndex);
+                        textureGarbageQueue.push({ currentFrameNumber, oldTex });
+                        pendingTextureSwaps.pop();
+                    }
+                    else {
+                        break;
+                    }
+                }
+
+                refreshObjectDescriptorsIfNeeded(
+                    fallbackTexture,
+                    uboBuffers,
+                    textureToggleBuffers,
+                    objectDescriptorSets,
+                    *globalSetLayout,
+                    *globalPool);
+
+                while (!textureGarbageQueue.empty()) {
+                    const auto& [frameAssigned, tex] = textureGarbageQueue.front();
+                    if (currentFrameNumber - frameAssigned >= GenSwapChain::MAX_FRAMES_IN_FLIGHT + 2) {
+                        textureGarbageQueue.pop();  // Now it's safe to destroy
+                    }
+                    else {
+                        break;
+                    }
+                }
 
                 FrameInfo frameInfo{
                     frameIndex,
@@ -335,8 +395,6 @@ namespace gen {
                     objectDescriptorSets[frameIndex],
                     gameObjects
                 };
-
-              
 
                 GlobalUbo ubo{};
                 ubo.projection = camera.getProjcetion();
@@ -352,49 +410,15 @@ namespace gen {
                 simpleRenderSystem.renderGameObjects(frameInfo);
                 pointLightSystem.render(frameInfo);
                 wireframeRenderSystem.render(frameInfo);
-                
                 genRenderer.endSwachChainRenderPass(commandBuffer);
                 genRenderer.endFrame();
 
                 currentFrameNumber++;
 
-                while (!pendingTextureSwaps.empty()) {
-                    auto [frameAssigned, objPtr, newTex, oldTex] = pendingTextureSwaps.front();
-                    if (currentFrameNumber - frameAssigned >= GenSwapChain::MAX_FRAMES_IN_FLIGHT * 2) {
-                        // Delay passed — apply new texture safely
-                        if (objPtr->texture) {
-                            // optional: garbage collect old texture
-                        }
-                        objPtr->texture = newTex;
-                        objPtr->textureDirty = true;
-                        textureGarbageQueue.push({ currentFrameNumber, oldTex });
-                        pendingTextureSwaps.pop();
-                        std::cout << "[SAFE] Applied texture change to object " << objPtr->getId() << "\n";
-                    }
-                    else {
-                        break; // Wait more
-                    }
-                }
-                while (!textureGarbageQueue.empty()) {
-                    const auto& [frameAssigned, tex] = textureGarbageQueue.front();
-                    if (currentFrameNumber - frameAssigned >= GenSwapChain::MAX_FRAMES_IN_FLIGHT + 2) {
-                        textureGarbageQueue.pop();  // Now it's safe to destroy
-                    }
-                    else {
-                        break;
-                    }
-                }
+                
 
 
-                refreshObjectDescriptorsIfNeeded(
-                    fallbackTexture,
-                    uboBuffers,
-                    textureToggleBuffers,
-                    objectDescriptorSets,
-                    *globalSetLayout,
-                    *globalPool);
             
-
             }
         }
 
@@ -412,12 +436,10 @@ namespace gen {
 		smoothVase.model = genModel;
         smoothVase.texture = texture;
         smoothVase.type = ObjectType::Player;
-        
         smoothVase.soundDisc = std::make_unique<SoundDiscComponent>();
         smoothVase.soundDisc->radius = 1.0f;
         smoothVase.soundDisc->visible = true;
         smoothVase.soundDisc->isPlayerControlled = true;
-
 		smoothVase.transform.translation = {-1.0f,-2.0f, 0.f};
 		smoothVase.transform.scale = glm::vec3(3.f);
 		gameObjects.emplace(smoothVase.getId(),std::move(smoothVase));
@@ -433,6 +455,7 @@ namespace gen {
 		genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/colored_cube.obj");
 		auto coloredCube = GenGameObject::createGameObject();
 		coloredCube.model = genModel;
+        
 		coloredCube.transform.translation = { 0.f,-.5f,0.f };
 		coloredCube.transform.scale = glm::vec3(0.5f);
 		gameObjects.emplace(coloredCube.getId(),std::move(coloredCube));
@@ -447,16 +470,33 @@ namespace gen {
         genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/sphere.obj");
         auto sphere = GenGameObject::createGameObject();
         sphere.model = genModel;
-        sphere.color = { 1.0f, 0.0f, 0.0f };
+        sphere.color = glm::vec3{ 1.0f, 0.0f, 0.0f };
         sphere.soundDisc = std::make_unique<SoundDiscComponent>();
         sphere.soundDisc->radius = .5f;
         sphere.soundDisc->visible = true;
         sphere.soundDisc->isPlayerControlled = true;
         sphere.transform.translation = { -1.f,-0.5f,-2.5f };
         sphere.transform.scale = glm::vec3(.1f);
-        sphere.type = ObjectType::Sphere;
+        sphere.type = ObjectType::Node;
+        sphere.node = std::make_unique<NodeComponent>();
+        sphere.node->selfPosition = sphere.transform.translation;
         gameObjects.emplace(sphere.getId(), std::move(sphere));
 
+        genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/sphere.obj");
+        auto sphere2 = GenGameObject::createGameObject();
+        sphere2.model = genModel;
+        sphere2.color = glm::vec3{ 1.0f, 0.0f, 0.0f };
+        sphere2.soundDisc = std::make_unique<SoundDiscComponent>();
+        sphere2.soundDisc->radius = .5f;
+        sphere2.soundDisc->visible = true;
+        sphere2.soundDisc->isPlayerControlled = true;
+        sphere2.transform.translation = { -3.f,-0.5f,-2.5f };
+        sphere2.transform.scale = glm::vec3(.1f);
+        sphere2.type = ObjectType::Node;
+        sphere2.node = std::make_unique<NodeComponent>();
+        sphere2.node->selfPosition = sphere2.transform.translation;
+
+        gameObjects.emplace(sphere2.getId(), std::move(sphere2));
 
         { // lumina alba din cub
             auto pointLight = GenGameObject::makePointLight(0.2f);
@@ -497,13 +537,17 @@ namespace gen {
             for (auto& [id, obj] : gameObjects) {
                 if (!obj.textureDirty) continue;
 
+                // Prevent fallback flickering: skip rebuild if texture not yet assigned
+                if (!obj.texture) {
+                    std::cerr << "[SKIP] Texture is still null for ID " << id << " — deferring descriptor rebuild.\n";
+                    continue;
+                }
+
                 VkDescriptorSet descriptorSet;
                 VkDescriptorBufferInfo uboInfo = uboBuffers[i]->descriptorInfo();
 
-                int useTextureFlag = obj.texture ? 1 : 0;
-                VkDescriptorImageInfo imageInfo = obj.texture
-                    ? obj.texture->descriptorInfo()
-                    : fallbackTexture->descriptorInfo();
+                int useTextureFlag = 1;  // texture is guaranteed valid
+                VkDescriptorImageInfo imageInfo = obj.texture->descriptorInfo();
 
                 if (textureToggleBuffers.find(id) == textureToggleBuffers.end()) {
                     std::vector<std::unique_ptr<GenBuffer>> buffers;
@@ -538,7 +582,9 @@ namespace gen {
         }
 
         for (auto& [id, obj] : gameObjects) {
-            obj.textureDirty = false;
+            if (obj.texture) {
+                obj.textureDirty = false;
+            }
         }
     }
 
@@ -552,4 +598,89 @@ namespace gen {
         textureCache[path] = newTexture;
         return newTexture;
     }
+
+    void AppCtrl::updateNodeColorAndTextureFromPlayer(
+        GenGameObject& player,
+        GenGameObject::Map& gameObjects,
+        const std::shared_ptr<GenTexture>& redTexture,
+        const std::shared_ptr<GenTexture>& orangeTexture,
+        const std::shared_ptr<GenTexture>& greenTexture,
+        int currentFrameNumber,
+        std::queue<std::tuple<int, GenGameObject*, std::shared_ptr<GenTexture>, std::shared_ptr<GenTexture>>>& pendingTextureSwaps)
+    {
+        GLFWwindow* window = genWindow.getGLFWwindow();
+        if (!player.soundDisc) return;
+
+        // Simple key press detection
+        const std::vector<int> moveKeys = { GLFW_KEY_I, GLFW_KEY_J, GLFW_KEY_K, GLFW_KEY_L };
+        bool isMovingKeyPressed = false;
+        for (int key : moveKeys) {
+            if (glfwGetKey(window, key) == GLFW_PRESS) {
+                isMovingKeyPressed = true;
+                break;
+            }
+        }
+
+        if (!isMovingKeyPressed) return; // no input, no sound
+
+        // Check modifiers
+        bool loud = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS;
+        bool quiet = glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS;
+
+        NodeComponent::NodeColor targetColor;
+        std::shared_ptr<GenTexture> selectedTexture;
+        float soundMultiplier = 1.0f;
+
+        if (loud) {
+            targetColor = NodeComponent::NodeColor::Red;
+            selectedTexture = redTexture;
+            soundMultiplier = 2.0f;
+        }
+        else if (quiet) {
+            targetColor = NodeComponent::NodeColor::Green;
+            selectedTexture = greenTexture;
+            soundMultiplier = 0.5f;
+        }
+        else {
+            targetColor = NodeComponent::NodeColor::Orange;
+            selectedTexture = orangeTexture;
+            soundMultiplier = 1.0f;
+        }
+
+        glm::vec2 playerCenter = { player.transform.translation.x, player.transform.translation.z };
+        float playerRadius = player.soundDisc->radius * soundMultiplier;
+
+        for (auto& [id, obj] : gameObjects) {
+            if (obj.type != ObjectType::Node || !obj.node || !obj.soundDisc) continue;
+
+            glm::vec2 nodeCenter = { obj.transform.translation.x, obj.transform.translation.z };
+            float nodeRadius = obj.soundDisc->radius;
+            float dist = glm::distance(playerCenter, nodeCenter);
+            float combinedRadius = playerRadius + nodeRadius;
+            if (dist <= combinedRadius) {
+                if (obj.node->color != targetColor) {
+                    obj.node->color = targetColor;
+                    obj.node->activated = true;
+                    obj.node->selfPosition = obj.transform.translation;
+
+                    //only apply new texture if color changed from last time
+                    if (obj.node->lastColorApplied != targetColor) {
+                        obj.node->lastColorApplied = targetColor;
+
+                        if (obj.texture != selectedTexture) {
+                            pendingTextureSwaps.push({ currentFrameNumber, &obj, selectedTexture, obj.texture });
+                        }
+
+                        std::cout << "[SOUND] Node " << id << " changed to "
+                            << static_cast<int>(targetColor) << "\n";
+                    }
+
+                }
+
+                
+            }
+        }
+    }
+
+
 }

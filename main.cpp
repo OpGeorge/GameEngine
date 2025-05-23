@@ -7,18 +7,14 @@
 
 int main() {
 
-	gen::AppCtrl mainApp{};
-
-
-	try {
-		mainApp.run();
-	}
-	catch (const std::exception& e) {
-		std::cerr << e.what() << '\n';
-		return EXIT_FAILURE;
-
-	}
-
-	return EXIT_SUCCESS;
+    try {
+        gen::AppCtrl app;
+        app.run();
+    }
+    catch (const std::exception& e) {
+        std::cerr << "[FATAL ERROR] " << e.what() << "\n";
+        return 1;
+    }
+    return 0;
 
 }

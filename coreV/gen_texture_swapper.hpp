@@ -24,7 +24,10 @@ namespace gen {
             std::unordered_map<GenGameObject::id_t, std::vector<std::unique_ptr<GenBuffer>>>& textureToggleBuffers,
             std::array<std::unordered_map<GenGameObject::id_t, VkDescriptorSet>, GenSwapChain::MAX_FRAMES_IN_FLIGHT>& objectDescriptorSets);
 
-        void swapTexture(GenGameObject& obj, const std::string& newTexturePath, int frameIndex);
+        void swapTexture(
+            GenGameObject& obj,
+            std::shared_ptr<GenTexture> newTexture,
+            int frameIndex);
 
     private:
         GenDevice& genDevice;

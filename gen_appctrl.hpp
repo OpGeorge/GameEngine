@@ -9,9 +9,13 @@
 #include "coreV/gen_descriptors.hpp"
 #include "gen_logic_manager.hpp"
 
+#include "node_propagation_system.hpp"
+
 #include <memory>
 #include <vector>
 
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/norm.hpp>
 
 namespace gen {
 
@@ -38,6 +42,13 @@ namespace gen {
 			GenDescriptorPool& globalPool);
 
 		std::shared_ptr<GenTexture> getCachedTexture(const std::string& path);
+		void updateNodeColorAndTextureFromPlayer(GenGameObject& player,
+			GenGameObject::Map& gameObjects,
+			const std::shared_ptr<GenTexture>& redTexture,
+			const std::shared_ptr<GenTexture>& orangeTexture,
+			const std::shared_ptr<GenTexture>& greenTexture, 
+			int currentFrameNumber,
+			std::queue<std::tuple<int, GenGameObject*, std::shared_ptr<GenTexture>, std::shared_ptr<GenTexture>>>& pendingTextureSwaps);
 
 	private:
 
@@ -56,7 +67,10 @@ namespace gen {
 		GenLogicManager logicManager;
 
 		std::unordered_map<std::string, std::shared_ptr<GenTexture>> textureCache;
-		
+
+		NodePropagationSystem propagationSystem;
+
+		glm::vec3 lastPlayerPosition = {};
 
 	};
 }

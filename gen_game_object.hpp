@@ -6,6 +6,7 @@
 #include<glm/gtc/matrix_transform.hpp>
 #include <memory>
 #include <unordered_map>
+#include <optional>
 
 
 
@@ -27,7 +28,8 @@ namespace gen {
 		Light,
 		Player,
 		NPC,
-		Sphere
+		Sphere,
+		Node
 	};
 
 
@@ -48,6 +50,24 @@ namespace gen {
 		bool visible = false;
 		bool isPlayerControlled = false;
 	};
+
+
+	struct NodeComponent {
+		enum class NodeColor {
+			White,
+			Red,
+			Orange,
+			Green
+		};
+
+		NodeColor color = NodeColor::White;
+		int parentId = -1;
+		bool activated = false;
+		glm::vec3 selfPosition{};
+		NodeColor lastColorApplied = NodeColor::White;
+		bool hasPropagated = false;
+	};
+	
 
 
 	class GenGameObject {
@@ -83,6 +103,8 @@ namespace gen {
 		std::unique_ptr<PointLightComponent> pointLight = nullptr;
 		std::unique_ptr<SoundSphereComponent> soundSphere = nullptr;
 		std::unique_ptr<SoundDiscComponent> soundDisc = nullptr;
+		std::unique_ptr<NodeComponent> node = nullptr;
+
 		bool textureDirty = false;
 		std::shared_ptr<GenTexture> texture{};
 
@@ -95,4 +117,6 @@ namespace gen {
 
 
 	};
+
+	
 }
