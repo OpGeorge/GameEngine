@@ -667,9 +667,8 @@ namespace gen {
                     if (obj.node->lastColorApplied != targetColor) {
                         obj.node->lastColorApplied = targetColor;
 
-                        if (obj.texture != selectedTexture) {
-                            pendingTextureSwaps.push({ currentFrameNumber, &obj, selectedTexture, obj.texture });
-                        }
+                        obj.texture = selectedTexture;
+                        obj.textureDirty = true;
 
                         std::cout << "[SOUND] Node " << id << " changed to "
                             << static_cast<int>(targetColor) << "\n";

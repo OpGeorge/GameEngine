@@ -29,6 +29,7 @@ namespace gen {
         int frameIndex)
     {
         obj.texture = newTexture;
+        obj.textureDirty = true;
 
         VkDescriptorBufferInfo uboInfo = uboBuffers[frameIndex]->descriptorInfo();
         VkDescriptorImageInfo imageInfo = newTexture->descriptorInfo();
