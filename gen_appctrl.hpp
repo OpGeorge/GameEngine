@@ -9,9 +9,13 @@
 #include "coreV/gen_descriptors.hpp"
 #include "gen_logic_manager.hpp"
 
+#include "node_propagation_system.hpp"
+
 #include <memory>
 #include <vector>
 
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/norm.hpp>
 
 namespace gen {
 
@@ -30,14 +34,24 @@ namespace gen {
 
 		void run();
 
-		void refreshObjectDescriptorsIfNeeded(std::shared_ptr<GenTexture> fallbackTexture,
+		void refreshObjectDescriptorsIfNeeded(
+	
+			std::shared_ptr<GenTexture> fallbackTexture,
 			std::vector<std::unique_ptr<GenBuffer>>& uboBuffers,
 			std::unordered_map<GenGameObject::id_t, std::vector<std::unique_ptr<GenBuffer>>>& textureToggleBuffers,
 			std::array<std::unordered_map<GenGameObject::id_t, VkDescriptorSet>, GenSwapChain::MAX_FRAMES_IN_FLIGHT>& objectDescriptorSets,
 			GenDescriptorSetLayout& globalSetLayout,
-			GenDescriptorPool& globalPool);
+			GenDescriptorPool& globalPool
+		);
 
 		std::shared_ptr<GenTexture> getCachedTexture(const std::string& path);
+		void updateNodeColorAndTextureFromPlayer(GenGameObject& player,
+			GenGameObject::Map& gameObjects,
+			const std::shared_ptr<GenTexture>& redTexture,
+			const std::shared_ptr<GenTexture>& orangeTexture,
+			const std::shared_ptr<GenTexture>& greenTexture,
+			int currentFrameIndex
+			);
 
 	private:
 
@@ -56,7 +70,12 @@ namespace gen {
 		GenLogicManager logicManager;
 
 		std::unordered_map<std::string, std::shared_ptr<GenTexture>> textureCache;
-		
+
+		NodePropagationSystem propagationSystem;
+
+		glm::vec3 lastPlayerPosition = {};
+
+		std::unordered_map<GenGameObject::id_t, int> lastTextureChangeFrame;
 
 	};
 }

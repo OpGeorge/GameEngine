@@ -1,6 +1,9 @@
 #include "gen_texture_swapper.hpp"
 
 #include <stdexcept>
+#include <cstdlib>
+#include <iostream>
+#include <stdexcept>
 
 namespace gen {
 
@@ -20,11 +23,20 @@ namespace gen {
     {
     }
 
-    void TextureSwapper::swapTexture(GenGameObject& obj, const std::string& newTexturePath, int frameIndex) {
-        obj.texture = std::make_shared<GenTexture>(genDevice, newTexturePath);
+    void TextureSwapper::swapTexture(
+        GenGameObject& obj,
+        std::shared_ptr<GenTexture> newTexture,
+        int frameIndex)
+    {
+        obj.texture = newTexture;
+        obj.textureDirty = true;
+
+        if (!obj.texture) {
+            std::cerr << "[NULL TEXTURE WARNING 1st] Object ID: " << obj.getId() << "\n";
+        }
 
         VkDescriptorBufferInfo uboInfo = uboBuffers[frameIndex]->descriptorInfo();
-        VkDescriptorImageInfo imageInfo = obj.texture->descriptorInfo();
+        VkDescriptorImageInfo imageInfo = newTexture->descriptorInfo();
 
         int useTextureFlag = 1;
         textureToggleBuffers[obj.getId()][frameIndex]->writeToBuffer(&useTextureFlag);
@@ -36,11 +48,18 @@ namespace gen {
             .writeImage(1, &imageInfo)
             .writeBuffer(2, &flagInfo);
 
+        if (!obj.texture) {
+            std::cerr << "[NULL TEXTURE WARNING 2nd] Object ID: " << obj.getId() << "\n";
+        }
+
         if (!writer.build(descriptorSet)) {
-            throw std::runtime_error("Failed to rebuild descriptor set for texture swap");
+            std::cerr << "[TEXTURE SWAP FAIL] Descriptor set allocation failed for object "
+                << obj.getId() << ". Will retry.\n";
+            return;
         }
 
         objectDescriptorSets[frameIndex][obj.getId()] = descriptorSet;
+        obj.textureDirty = false; // Mark as clean
     }
 
 }
