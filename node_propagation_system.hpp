@@ -23,8 +23,8 @@ namespace gen {
 			float radius,
 			std::shared_ptr<GenTexture> orangeTexture,
 			std::shared_ptr<GenTexture> greenTexture,
-			int currentFrameNumber,
-			std::queue<std::tuple<int, GenGameObject*, std::shared_ptr<GenTexture>, std::shared_ptr<GenTexture>>>& pendingTextureSwaps);
+			int currentFrameIndex,
+			std::unordered_map<GenGameObject::id_t, int>& lastChangeTracker);
 
 	private:
 		// Helper: get all adjacent nodes within radius

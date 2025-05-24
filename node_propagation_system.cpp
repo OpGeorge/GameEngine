@@ -32,8 +32,10 @@ namespace gen {
         GenGameObject::Map& gameObjects,
         float radius,
         std::shared_ptr<GenTexture> orangeTexture,
-        std::shared_ptr<GenTexture> greenTexture, int currentFrameNumber,
-        std::queue<std::tuple<int, GenGameObject*, std::shared_ptr<GenTexture>, std::shared_ptr<GenTexture>>>& pendingTextureSwaps)
+        std::shared_ptr<GenTexture> greenTexture,
+        int currentFrameIndex,
+        std::unordered_map<GenGameObject::id_t, int>& lastChangeTracker
+        )
     {
         if (!sourceNode.node) return;
 
@@ -63,7 +65,17 @@ namespace gen {
                 n.selfPosition = neighbor->transform.translation;
 
                 if (neighbor->texture != orangeTexture) {
-                    pendingTextureSwaps.push({ currentFrameNumber, neighbor, orangeTexture, neighbor->texture });
+                    const int cooldownFrames = 2;
+                    if (lastChangeTracker.find(neighbor->getId()) != lastChangeTracker.end() &&
+                        currentFrameIndex - lastChangeTracker[neighbor->getId()] < cooldownFrames) {
+                        continue;
+                    }
+
+                    neighbor->texture = orangeTexture;
+                    neighbor->textureDirty = true;
+
+                    lastChangeTracker[neighbor->getId()] = currentFrameIndex;
+
                 }
                 else {
                     //std::cout << " already Orange\n";
@@ -82,7 +94,16 @@ namespace gen {
                 n.selfPosition = neighbor->transform.translation;
 
                 if (neighbor->texture != greenTexture) {
-                    pendingTextureSwaps.push({ currentFrameNumber, neighbor, greenTexture, neighbor->texture });
+
+                    const int cooldownFrames = 2;
+                    if (lastChangeTracker.find(neighbor->getId()) != lastChangeTracker.end() &&
+                        currentFrameIndex - lastChangeTracker[neighbor->getId()] < cooldownFrames) {
+                        continue;
+                    }
+
+                    neighbor->texture = greenTexture;
+                    neighbor->textureDirty = true;
+                    lastChangeTracker[neighbor->getId()] = currentFrameIndex;
                 }
                 else {
                     //std::cout << " already Green\n";

@@ -31,6 +31,10 @@ namespace gen {
         obj.texture = newTexture;
         obj.textureDirty = true;
 
+        if (!obj.texture) {
+            std::cerr << "[NULL TEXTURE WARNING 1st] Object ID: " << obj.getId() << "\n";
+        }
+
         VkDescriptorBufferInfo uboInfo = uboBuffers[frameIndex]->descriptorInfo();
         VkDescriptorImageInfo imageInfo = newTexture->descriptorInfo();
 
@@ -43,6 +47,10 @@ namespace gen {
             .writeBuffer(0, &uboInfo)
             .writeImage(1, &imageInfo)
             .writeBuffer(2, &flagInfo);
+
+        if (!obj.texture) {
+            std::cerr << "[NULL TEXTURE WARNING 2nd] Object ID: " << obj.getId() << "\n";
+        }
 
         if (!writer.build(descriptorSet)) {
             std::cerr << "[TEXTURE SWAP FAIL] Descriptor set allocation failed for object "
