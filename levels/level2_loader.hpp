@@ -7,13 +7,14 @@
 
 namespace gen {
 
-    class Level1Loader {
+    class Level2Loader {
     public:
         // You pass in the Vulkan device so models/textures can be created.
-        static void loadLevel1(GenDevice& device, GenGameObject::Map& gameObjects);
+        static void loadLevel2(GenDevice& device, GenGameObject::Map& gameObjects);
         static glm::vec3 getStartingCameraPos();
     private:
         static glm::vec3 startingCameraPos;
+
     };
 
 }

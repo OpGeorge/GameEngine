@@ -66,6 +66,9 @@ namespace gen {
 		std::unique_ptr<GenDescriptorPool> globalPool{};
 
 		GenGameObject::Map gameObjects;
+
+		
+
 		GenGameObject::Map* activeGameObjects = nullptr;
 
 		GenLogicManager logicManager;
