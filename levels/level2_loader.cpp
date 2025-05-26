@@ -1,4 +1,4 @@
-#include "level1_loader.hpp"
+#include "level2_loader.hpp"
 
 
 #include "../gen_game_object.hpp"
@@ -8,17 +8,15 @@
 
 namespace gen {
 
+    glm::vec3 Level2Loader::startingCameraPos{};
 
-    glm::vec3 Level1Loader::startingCameraPos{};
-    
-    glm::vec3 Level1Loader::getStartingCameraPos() {
+    glm::vec3 Level2Loader::getStartingCameraPos() {
         return startingCameraPos;
     }
 
-    void Level1Loader::loadLevel1(GenDevice& genDevice, GenGameObject::Map& gameObjects) {
+    void Level2Loader::loadLevel2(GenDevice& genDevice, GenGameObject::Map& gameObjects) {
         
-        startingCameraPos = glm::vec3(0.f, -0.3f, 1.f);
-
+        startingCameraPos = glm::vec3(5.f, 0.f, -3.f);
         auto texture = std::make_shared<GenTexture>(genDevice, "textures/vaseTexture.png");
 
         std::shared_ptr<GenModel> genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/smooth_vase.obj");
@@ -26,7 +24,7 @@ namespace gen {
         vase.model = genModel;
         vase.texture = texture;
         vase.type = ObjectType::Player;
-        vase.transform.translation = { -1.0f, -2.0f, 2.5f };
+        vase.transform.translation = { 1.5f, -2.0f, 2.5f };
         vase.transform.scale = glm::vec3(3.f);
         vase.soundDisc = std::make_unique<SoundDiscComponent>();
         vase.soundDisc->radius = 1.0f;
@@ -35,25 +33,11 @@ namespace gen {
 
         gameObjects.emplace(vase.getId(), std::move(vase));
 
-        // Repeat for other objects like flat vase, cube, lights, etc.
-        genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/flat_vase.obj");
-        auto flatVase = GenGameObject::createGameObject();
-        flatVase.model = genModel;
-        flatVase.transform.translation = { 1.f,0.0f,0.f };
-        flatVase.transform.scale = glm::vec3(3.f);
-        flatVase.type = ObjectType::NPC;
-        gameObjects.emplace(flatVase.getId(), std::move(flatVase)); // make sure the move has a valid pointer and a not null obj
 
-        genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/colored_cube.obj");
-        auto coloredCube = GenGameObject::createGameObject();
-        coloredCube.model = genModel;
-        coloredCube.transform.translation = { 0.f,-.5f,0.f };
-        coloredCube.transform.scale = glm::vec3(0.5f);
-        gameObjects.emplace(coloredCube.getId(), std::move(coloredCube));
 
+        /*
         //ground
         genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/quad.obj");
-
         auto surface = GenGameObject::createGameObject();
         surface.model = genModel;
         surface.transform.translation = { 0.f,0.0f,0.f };
@@ -140,22 +124,7 @@ namespace gen {
         gameObjects.emplace(sphere5.getId(), std::move(sphere5));
 
 
-        //last sound node
-        genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/sphere.obj");
-        auto sphere6 = GenGameObject::createGameObject();
-        sphere6.model = genModel;
-        sphere6.color = glm::vec3{ 1.0f, 0.0f, 0.0f };
-        sphere6.soundDisc = std::make_unique<SoundDiscComponent>();
-        sphere6.soundDisc->radius = .5f;
-        sphere6.soundDisc->visible = true;
-        sphere6.soundDisc->isPlayerControlled = true;
-        sphere6.transform.translation = { 1.f,-0.5f,.5f };
-        sphere6.transform.scale = glm::vec3(.1f);
-        sphere6.type = ObjectType::Node;
-        sphere6.node = std::make_unique<NodeComponent>();
-        sphere6.node->selfPosition = sphere6.transform.translation;
-
-        gameObjects.emplace(sphere6.getId(), std::move(sphere6));
+ 
 
 
 
@@ -184,7 +153,7 @@ namespace gen {
             pointLight.transform.translation = glm::vec3(rotateLight * glm::vec4(-1.f, -1.f, -1.f, 1.f));
             gameObjects.emplace(pointLight.getId(), std::move(pointLight));
         }
-
+        */
         
     }
 
