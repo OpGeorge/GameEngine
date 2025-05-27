@@ -200,7 +200,7 @@ namespace gen {
 
 
         GenCamera camera{};
-        camera.setViewDirection(glm::vec3(0.0f, -0.5f, 0.0f), glm::vec3(0.0f, 0.0f, 2.5f));
+        camera.setViewDirection(glm::vec3(0.0f, -0.5f, -2.5f), glm::vec3(0.0f, 0.0f, -1.0f));
 
         auto currentTime = std::chrono::high_resolution_clock::now();
 
@@ -212,7 +212,8 @@ namespace gen {
         {
             auto cam1 = GenGameObject::createGameObject();
             cam1.type = ObjectType::Camera;
-            cam1.transform.translation = { 0.f, -0.3f, 1.f };
+            cam1.transform.translation = { 0.f, -0.3f, 3.f };
+            cam1.transform.rotation = { 0.0f,60.0f,0.0f };
 
             auto cam2 = GenGameObject::createGameObject();
             cam2.type = ObjectType::Camera;
@@ -254,6 +255,10 @@ namespace gen {
         KeyboardMovementController cameraController{};
         const float MAX_FRAME_TIME = 165.f;
 
+        bool followPlayerCamera = false;
+        float cameraPitch = -1.5f;
+        bool firstFollowBind = true;
+
         while (!genWindow.shouldClose()) {
             glfwPollEvents();
 
@@ -263,6 +268,7 @@ namespace gen {
             if (glfwGetKey(genWindow.getGLFWwindow(), GLFW_KEY_TAB) == GLFW_PRESS) {
                 if (!tabPressedLastFrame) {
                     activeCameraIndex = (activeCameraIndex + 1) % cameraStand.size();
+                    followPlayerCamera = false;
                 }
                 tabPressedLastFrame = true;
             }
@@ -275,30 +281,70 @@ namespace gen {
             currentTime = newTime;
             frameTime = glm::min(frameTime, MAX_FRAME_TIME);
 
-            cameraController.processMouseLookToggle(genWindow.getGLFWwindow());
-            cameraController.updateCameraViewFromMouse(genWindow.getGLFWwindow(), cameraStand[activeCameraIndex]);
-            cameraController.moveInPlaneXZ(genWindow.getGLFWwindow(), frameTime, cameraStand[activeCameraIndex]);
+            // bind camera to player logic
 
-            camera.setViewYXZ(cameraStand[activeCameraIndex].transform.translation, cameraStand[activeCameraIndex].transform.rotation);
+            if (followPlayerCamera && !controllableObjects.empty()) {
+                GenGameObject* activeObj = controllableObjects[activeObjectIndex];
+
+                cameraController.processMouseLookToggle(genWindow.getGLFWwindow());
+                
+                if (cameraController.mouseLookEnabled) {
+                    double mouseX, mouseY;
+                    glfwGetCursorPos(genWindow.getGLFWwindow(), &mouseX, &mouseY);
+
+                    double deltaX = mouseX - cameraController.lastMouseX;
+                    double deltaY = mouseY - cameraController.lastMouseY;
+                    cameraController.lastMouseX = mouseX;
+                    cameraController.lastMouseY = mouseY;
+
+                    // Update player yaw (horizontal)
+                    activeObj->transform.rotation.y += static_cast<float>(deltaX) * cameraController.mouseSensitivity;
+
+                    // Update camera pitch (vertical)
+                    cameraPitch -= static_cast<float>(deltaY) * cameraController.mouseSensitivity;
+                    cameraPitch = glm::clamp(cameraPitch, -1.5f, 1.5f);  // optional clamp
+
+
+                }
+
+                glm::vec3 playerPos = activeObj->transform.translation;
+                glm::vec3 cameraPos = playerPos + glm::vec3(0.f, -1.5f, 0.f);  // raise camera above player (Y-down)
+                glm::vec3 cameraRot = glm::vec3(cameraPitch, activeObj->transform.rotation.y, 0.f);
+                camera.setViewYXZ(cameraPos, cameraRot);
+
+
+              
+            }
+            else {
+                cameraController.processMouseLookToggle(genWindow.getGLFWwindow());
+                cameraController.updateCameraViewFromMouse(genWindow.getGLFWwindow(), cameraStand[activeCameraIndex]);
+                cameraController.moveInPlaneXZ(genWindow.getGLFWwindow(), frameTime, cameraStand[activeCameraIndex]);
+                camera.setViewYXZ(cameraStand[activeCameraIndex].transform.translation, cameraStand[activeCameraIndex].transform.rotation);
+            }
+            // end of bind camera to player logic
+           
             float aspect = genRenderer.getAspectratio();
             camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 10.f);
 
+            //end of camera logic (above is the ratio and perspective logic)
+
+            // apply physics to player entities logic function
             logicManager.update(frameTime, *activeGameObjects);
+
 
             if (controllableNPCs.size() > 0) {
                 npcController.moveToTarget(frameTime, *controllableNPCs[0], target, 0.5f);
             }
             
 
-
+            // player object select
             static bool switchPressedLastFrame = false;
             if (glfwGetKey(genWindow.getGLFWwindow(), GLFW_KEY_C) == GLFW_PRESS) {
-
-                if (!switchPressedLastFrame) {
-
-
+                if (!switchPressedLastFrame && !controllableObjects.empty()) {
                     activeObjectIndex = (activeObjectIndex + 1) % controllableObjects.size();
-                    std::cout << "Now controlling object index: " << activeObjectIndex << "\n";
+                    followPlayerCamera = true;
+                    firstFollowBind = true;
+                    std::cout << "Camera now following player index: " << activeObjectIndex << "\n";
                 }
                 switchPressedLastFrame = true;
             }
@@ -306,24 +352,7 @@ namespace gen {
                 switchPressedLastFrame = false;
             }
 
-            static bool textureSwapPressedLastFrame = false;
-
-            if (glfwGetKey(genWindow.getGLFWwindow(), GLFW_KEY_T) == GLFW_PRESS) {
-                if (!textureSwapPressedLastFrame && !controllableObjects.empty()) {
-                    GenGameObject* activeObj = controllableObjects[activeObjectIndex];
-                    auto newTex = getCachedTexture("textures/red.png");
-                    if (activeObj->texture != newTex) {
-                        activeObj->texture = newTex;
-                        activeObj->textureDirty = true;
-
-                    }
-                }
-                textureSwapPressedLastFrame = true;
-            }
-            else {
-                textureSwapPressedLastFrame = false;
-            }
-
+            // control Player object logic + sound propgation form player logic
             if (!controllableObjects.empty()) {
                 GenGameObject* activeObj = controllableObjects[activeObjectIndex];
 
@@ -362,12 +391,10 @@ namespace gen {
                 }
             }
 
-
+            // frame render with the applied above logic
             if (auto commandBuffer = genRenderer.beginFrame()) {
 
                 int frameIndex = genRenderer.getFrameIndex();
-
-
 
                 refreshObjectDescriptorsIfNeeded(
                     fallbackTexture,
@@ -376,8 +403,6 @@ namespace gen {
                     objectDescriptorSets,
                     *globalSetLayout,
                     *globalPool);
-
-
 
                 FrameInfo frameInfo{
                     frameIndex,
