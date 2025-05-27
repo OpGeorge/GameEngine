@@ -17,7 +17,7 @@ namespace gen {
 
     void Level1Loader::loadLevel1(GenDevice& genDevice, GenGameObject::Map& gameObjects) {
         
-        startingCameraPos = glm::vec3(0.f, -0.3f, 1.f);
+        startingCameraPos = glm::vec3(0.f, 0.0f, 1.f);
 
         auto texture = std::make_shared<GenTexture>(genDevice, "textures/vaseTexture.png");
 
