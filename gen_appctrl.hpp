@@ -50,7 +50,8 @@ namespace gen {
 			const std::shared_ptr<GenTexture>& redTexture,
 			const std::shared_ptr<GenTexture>& orangeTexture,
 			const std::shared_ptr<GenTexture>& greenTexture,
-			int currentFrameIndex
+			int currentFrameIndex,
+			float elapsedTime
 			);
 
 	private:
@@ -80,6 +81,8 @@ namespace gen {
 		glm::vec3 lastPlayerPosition = {};
 
 		std::unordered_map<GenGameObject::id_t, int> lastTextureChangeFrame;
+
+		std::unordered_map<GenGameObject::id_t, float> nodeCooldowns;
 
 	};
 }

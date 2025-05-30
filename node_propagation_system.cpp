@@ -34,7 +34,9 @@ namespace gen {
         std::shared_ptr<GenTexture> orangeTexture,
         std::shared_ptr<GenTexture> greenTexture,
         int currentFrameIndex,
-        std::unordered_map<GenGameObject::id_t, int>& lastChangeTracker
+        std::unordered_map<GenGameObject::id_t, int>& lastChangeTracker,
+        std::unordered_map<GenGameObject::id_t, float>& nodeCooldowns,
+        float elapsedTime
         )
     {
         if (!sourceNode.node) return;
@@ -63,6 +65,7 @@ namespace gen {
                 n.parentId = sourceNode.getId();
                 n.activated = true;
                 n.selfPosition = neighbor->transform.translation;
+                nodeCooldowns[neighbor->getId()] = elapsedTime + 7.0;
 
                 if (neighbor->texture != orangeTexture) {
                     const int cooldownFrames = 2;
@@ -92,6 +95,7 @@ namespace gen {
                 n.parentId = sourceNode.getId();
                 n.activated = true;
                 n.selfPosition = neighbor->transform.translation;
+                nodeCooldowns[neighbor->getId()] = elapsedTime + 7.0;
 
                 if (neighbor->texture != greenTexture) {
 
