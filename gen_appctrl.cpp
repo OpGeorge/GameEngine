@@ -258,6 +258,7 @@ namespace gen {
         bool followPlayerCamera = false;
         float cameraPitch = -1.5f;
         bool firstFollowBind = true;
+        float elapsedTime = 0.f;
 
         while (!genWindow.shouldClose()) {
             glfwPollEvents();
@@ -276,8 +277,10 @@ namespace gen {
                 tabPressedLastFrame = false;
             }
 
+            
             auto newTime = std::chrono::high_resolution_clock::now();
             float frameTime = std::chrono::duration<float>(newTime - currentTime).count();
+            elapsedTime += frameTime;
             currentTime = newTime;
             frameTime = glm::min(frameTime, MAX_FRAME_TIME);
 
@@ -331,6 +334,30 @@ namespace gen {
             // apply physics to player entities logic function
             logicManager.update(frameTime, *activeGameObjects);
 
+            // Reset nodes after cooldown expires
+            for (auto& [id, obj] : *activeGameObjects) {
+                if (obj.type != ObjectType::Node || !obj.node) continue;
+
+                auto cooldownIt = nodeCooldowns.find(id);
+                if (cooldownIt != nodeCooldowns.end() && elapsedTime >= cooldownIt->second) {
+                    auto& node = *obj.node;
+
+                    node.color = NodeComponent::NodeColor::White;
+                    node.lastColorApplied = NodeComponent::NodeColor::White;
+                    node.activated = false;
+                    node.hasPropagated = false;
+                    node.parentId = -1;
+
+                    auto whiteTexture = getCachedTexture("textures/white.png");
+                    if (obj.texture != whiteTexture) {
+                        obj.texture = whiteTexture;
+                        obj.textureDirty = true;
+                    }
+
+                    nodeCooldowns.erase(cooldownIt);
+                }
+            }
+
 
             if (controllableNPCs.size() > 0) {
                 npcController.moveToTarget(frameTime, *controllableNPCs[0], target, 0.5f);
@@ -367,7 +394,8 @@ namespace gen {
                         getCachedTexture("textures/red.png"),
                         getCachedTexture("textures/orange.png"),
                         getCachedTexture("textures/green.png"),
-                        currentFrameNumber
+                        currentFrameNumber,
+                        elapsedTime
                     );
 
                     for (auto& [id, obj] : *activeGameObjects) {
@@ -381,7 +409,9 @@ namespace gen {
                                 getCachedTexture("textures/orange.png"),
                                 getCachedTexture("textures/green.png"),
                                 currentFrameNumber,
-                                lastTextureChangeFrame
+                                lastTextureChangeFrame,
+                                nodeCooldowns,
+                                elapsedTime
                             );
 
                             obj.node->hasPropagated = true;
@@ -527,7 +557,8 @@ namespace gen {
         const std::shared_ptr<GenTexture>& redTexture,
         const std::shared_ptr<GenTexture>& orangeTexture,
         const std::shared_ptr<GenTexture>& greenTexture,
-        int currentFrameIndex
+        int currentFrameIndex,
+        float elapsedTime
     )
     {
         GLFWwindow* window = genWindow.getGLFWwindow();
@@ -600,8 +631,15 @@ namespace gen {
         }
 
         // Apply change only if the closest is 20% closer (in squared distance)
+        
         if (closestNode &&
             (secondClosestNode == nullptr || closestDistSq <= 0.8f * secondClosestDistSq)) {
+            auto cooldownIt = nodeCooldowns.find(closestNode->getId());
+
+            if (cooldownIt != nodeCooldowns.end() && elapsedTime < cooldownIt->second) {
+                // Node is still in cooldown
+                return;
+            }
 
             auto& nodeObj = *closestNode;
             auto& node = *nodeObj.node;
@@ -617,9 +655,12 @@ namespace gen {
 
 
                     const int cooldownFrames = 6;
+                    nodeCooldowns[nodeObj.getId()] = elapsedTime + 7.0f;  // start 7-second cooldown
                     auto lastChange = lastTextureChangeFrame.find(nodeObj.getId());
                     if (lastChange == lastTextureChangeFrame.end() ||
-                        currentFrameIndex - lastChange->second >= cooldownFrames && nodeObj.texture.get() != selectedTexture.get()) {
+                        (currentFrameIndex - lastChange->second >= cooldownFrames &&
+                            nodeObj.texture.get() != selectedTexture.get())) 
+                    {
 
                         nodeObj.texture = selectedTexture;
                         nodeObj.textureDirty = true;

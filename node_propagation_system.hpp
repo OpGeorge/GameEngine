@@ -24,7 +24,9 @@ namespace gen {
 			std::shared_ptr<GenTexture> orangeTexture,
 			std::shared_ptr<GenTexture> greenTexture,
 			int currentFrameIndex,
-			std::unordered_map<GenGameObject::id_t, int>& lastChangeTracker);
+			std::unordered_map<GenGameObject::id_t, int>& lastChangeTracker,
+			std::unordered_map<GenGameObject::id_t, float>& nodeCooldowns,
+			float elapsedTime);
 
 	private:
 		// Helper: get all adjacent nodes within radius
