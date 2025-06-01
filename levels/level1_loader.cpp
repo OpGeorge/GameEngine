@@ -42,6 +42,7 @@ namespace gen {
         flatVase.transform.translation = { 1.f,0.0f,0.f };
         flatVase.transform.scale = glm::vec3(3.f);
         flatVase.type = ObjectType::NPC;
+        flatVase.npcBehavior = std::make_unique<NPCBehaviorComponent>();
         gameObjects.emplace(flatVase.getId(), std::move(flatVase)); // make sure the move has a valid pointer and a not null obj
 
         genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/colored_cube.obj");

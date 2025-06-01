@@ -44,6 +44,8 @@ namespace gen {
         Level2Loader::loadLevel2(genDevice, gameObjects);
         activeGameObjects = &gameObjects;
 
+        std::srand(static_cast<unsigned>(std::time(nullptr)));
+
         const int maxObjects = static_cast<int>(gameObjects.size()) + 10;  // Add padding
 
         globalPool = GenDescriptorPool::Builder(genDevice)
@@ -360,7 +362,12 @@ namespace gen {
 
 
             if (controllableNPCs.size() > 0) {
-                npcController.moveToTarget(frameTime, *controllableNPCs[0], target, 0.5f);
+                // Update NPC behavior AI
+                auto sharedWhiteTexture = getCachedTexture("textures/white.png");
+
+                for (GenGameObject* npc : controllableNPCs) {
+                    npcController.updateAI(frameTime, *npc, *activeGameObjects, sharedWhiteTexture);
+                }
             }
             
 
