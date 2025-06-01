@@ -69,6 +69,19 @@ namespace gen {
 	};
 	
 
+	enum class NPCState {
+		IdleRoaming,
+		SeekingSoundSource,
+		TracingToRoot,
+		ReachedRoot
+	};
+
+	struct NPCBehaviorComponent {
+		NPCState state = NPCState::IdleRoaming;
+		int currentTargetNodeId = -1;
+		float idleTimer = 0.f;
+	};
+
 
 	class GenGameObject {
 
@@ -104,6 +117,7 @@ namespace gen {
 		std::unique_ptr<SoundSphereComponent> soundSphere = nullptr;
 		std::unique_ptr<SoundDiscComponent> soundDisc = nullptr;
 		std::unique_ptr<NodeComponent> node = nullptr;
+		std::unique_ptr<NPCBehaviorComponent> npcBehavior = nullptr;
 
 		bool textureDirty = false;
 		std::shared_ptr<GenTexture> texture{};
