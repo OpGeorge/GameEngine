@@ -119,6 +119,8 @@ namespace gen {
 		std::unique_ptr<NodeComponent> node = nullptr;
 		std::unique_ptr<NPCBehaviorComponent> npcBehavior = nullptr;
 
+		std::string tag = "";
+
 		bool textureDirty = false;
 		std::shared_ptr<GenTexture> texture{};
 

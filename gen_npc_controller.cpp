@@ -70,9 +70,26 @@ namespace gen {
         float dt,
         GenGameObject& npc,
         GenGameObject::Map& gameObjects,
-        std::shared_ptr<GenTexture> whiteTexture
+        std::shared_ptr<GenTexture> whiteTexture,
+        AppCtrl* appCtrl
     ) {
         if (!npc.npcBehavior) return;
+
+        const float npcKillRadius = 1.5f;
+        glm::vec2 npcPos = { npc.transform.translation.x, npc.transform.translation.z };
+
+        for (auto& [id, obj] : gameObjects) {
+            if (obj.type != ObjectType::Player) continue;
+
+            glm::vec2 playerPos = { obj.transform.translation.x, obj.transform.translation.z };
+            float dist = glm::length(npcPos - playerPos);
+
+            if (dist <= npcKillRadius) {
+                std::cout << "[NPC Trigger] Restart due to player proximity\n";
+                appCtrl->resetLevelTransforms(appCtrl->initialTransformsLevel1);  // direct call
+                return;
+            }
+        }
 
         auto& behavior = *npc.npcBehavior;
 

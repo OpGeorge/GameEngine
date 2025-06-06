@@ -7,7 +7,7 @@
 
 namespace gen {
 
-#define MAX_LIGHTS 10
+#define MAX_LIGHTS 100
 
 	struct PointLight {
 
@@ -25,6 +25,7 @@ namespace gen {
 		glm::vec4 ambientLightColor{ 1.f,1.f,1.f,.02f };
 		PointLight pointLights[MAX_LIGHTS];
 		int numLights;
+		alignas(16) glm::vec3 padding;
 
 		//glm::vec3 lightDirection = glm::normalize(glm::vec3{ 1.f,-3.f,-1.f });
 	};
