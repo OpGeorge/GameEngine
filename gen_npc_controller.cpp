@@ -169,6 +169,7 @@ namespace gen {
                     auto pit = gameObjects.find(parentId);
                     if (pit != gameObjects.end()) {
                         behavior.currentTargetNodeId = parentId;
+                        behavior.state = NPCState::TracingToRoot;
                         std::cout << "[NPC] Tracing to parent node " << parentId << "\n";
                     }
                     else {
@@ -179,6 +180,61 @@ namespace gen {
                 }
             }
         }
+        else if (behavior.state == NPCState::TracingToRoot) {
+            GenGameObject* targetNode = nullptr;
+
+            if (behavior.currentTargetNodeId != -1) {
+                unsigned int id = static_cast<unsigned int>(behavior.currentTargetNodeId);
+                auto it = gameObjects.find(id);
+                if (it != gameObjects.end()) {
+                    targetNode = &it->second;
+                }
+            }
+
+            if (!targetNode) {
+                behavior.state = NPCState::IdleRoaming;
+                behavior.currentTargetNodeId = -1;
+                return;
+            }
+
+            moveToTarget(dt, npc, targetNode->transform.translation);
+
+            glm::vec2 npcPos = { npc.transform.translation.x, npc.transform.translation.z };
+            glm::vec2 tgtPos = { targetNode->transform.translation.x, targetNode->transform.translation.z };
+
+            if (glm::distance2(npcPos, tgtPos) < 0.02f) {
+                auto& node = *targetNode->node;
+
+                node.color = NodeComponent::NodeColor::White;
+                node.activated = false;
+                node.hasPropagated = false;
+
+                if (targetNode->texture != whiteTexture) {
+                    targetNode->texture = whiteTexture;
+                    targetNode->textureDirty = true;
+                }
+
+                if (node.parentId != -1) {
+                    unsigned int parentId = static_cast<unsigned int>(node.parentId);
+                    auto pit = gameObjects.find(parentId);
+                    if (pit != gameObjects.end()) {
+                        behavior.currentTargetNodeId = parentId;
+                        std::cout << "[NPC] Continuing trace to parent node " << parentId << "\n";
+                    }
+                    else {
+                        behavior.state = NPCState::IdleRoaming;
+                        behavior.currentTargetNodeId = -1;
+                        std::cout << "[NPC] Reached root node.\n";
+                    }
+                }
+                else {
+                    behavior.state = NPCState::IdleRoaming;
+                    behavior.currentTargetNodeId = -1;
+                    std::cout << "[NPC] Reached root node (no parent).\n";
+                }
+            }
+        }
+
     }
 
 
