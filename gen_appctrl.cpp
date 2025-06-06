@@ -41,8 +41,20 @@ namespace gen {
     AppCtrl::AppCtrl() {
 
         Level1Loader::loadLevel1(genDevice, gameObjects);
+        for (const auto& [id, obj] : gameObjects) {
+            if (!obj.tag.empty() && (obj.type == ObjectType::Player || obj.type == ObjectType::NPC)) {
+                initialTransformsLevel1[obj.tag] = obj.transform;
+            }
+        }
         Level2Loader::loadLevel2(genDevice, gameObjects);
+        for (const auto& [id, obj] : gameObjects) {
+            if (!obj.tag.empty() && (obj.type == ObjectType::Player || obj.type == ObjectType::NPC)) {
+                initialTransformsLevel2[obj.tag] = obj.transform;
+            }
+        }
         activeGameObjects = &gameObjects;
+
+        std::srand(static_cast<unsigned>(std::time(nullptr)));
 
         const int maxObjects = static_cast<int>(gameObjects.size()) + 10;  // Add padding
 
@@ -327,7 +339,7 @@ namespace gen {
             // end of bind camera to player logic
            
             float aspect = genRenderer.getAspectratio();
-            camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 10.f);
+            camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 50.f);
 
             //end of camera logic (above is the ratio and perspective logic)
 
@@ -360,7 +372,12 @@ namespace gen {
 
 
             if (controllableNPCs.size() > 0) {
-                npcController.moveToTarget(frameTime, *controllableNPCs[0], target, 0.5f);
+                // Update NPC behavior AI
+                auto sharedWhiteTexture = getCachedTexture("textures/white.png");
+
+                for (GenGameObject* npc : controllableNPCs) {
+                    npcController.updateAI(frameTime, *npc, *activeGameObjects, sharedWhiteTexture,this);
+                }
             }
             
 
@@ -377,6 +394,18 @@ namespace gen {
             }
             else {
                 switchPressedLastFrame = false;
+            }
+
+            static bool rPressedLastFrame = false;
+            if (glfwGetKey(genWindow.getGLFWwindow(), GLFW_KEY_R) == GLFW_PRESS) {
+                if (!rPressedLastFrame) {
+                    std::cout << "Resetting Level 1 positions...\n";
+                    resetLevelTransforms(initialTransformsLevel1);
+                }
+                rPressedLastFrame = true;
+            }
+            else {
+                rPressedLastFrame = false;
             }
 
             // control Player object logic + sound propgation form player logic
@@ -675,5 +704,16 @@ namespace gen {
 
     }
 
+
+    void AppCtrl::resetLevelTransforms(const std::unordered_map<std::string, TransformComponent>& initialTransforms) {
+        for (auto& [id, obj] : *activeGameObjects) {
+            if (!obj.tag.empty()) {
+                auto it = initialTransforms.find(obj.tag);
+                if (it != initialTransforms.end()) {
+                    obj.transform = it->second;
+                }
+            }
+        }
+    }
 
 }

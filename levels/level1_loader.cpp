@@ -4,6 +4,7 @@
 #include "../gen_game_object.hpp"
 #include "../coreV/gen_texture.hpp"
 #include "../coreV/gen_model.hpp"
+#include "node_layouts.hpp"
 #include <memory>
 
 namespace gen {
@@ -27,11 +28,13 @@ namespace gen {
         vase.texture = texture;
         vase.type = ObjectType::Player;
         vase.transform.translation = { -1.0f, -2.0f, 2.5f };
+        vase.transform.rotation.y = glm::radians(180.f);
         vase.transform.scale = glm::vec3(3.f);
         vase.soundDisc = std::make_unique<SoundDiscComponent>();
         vase.soundDisc->radius = 1.0f;
         vase.soundDisc->visible = true;
         vase.soundDisc->isPlayerControlled = true;
+        vase.tag = "level1_player";
 
         gameObjects.emplace(vase.getId(), std::move(vase));
 
@@ -42,6 +45,8 @@ namespace gen {
         flatVase.transform.translation = { 1.f,0.0f,0.f };
         flatVase.transform.scale = glm::vec3(3.f);
         flatVase.type = ObjectType::NPC;
+        flatVase.npcBehavior = std::make_unique<NPCBehaviorComponent>();
+        flatVase.tag = "level1_npc_1";
         gameObjects.emplace(flatVase.getId(), std::move(flatVase)); // make sure the move has a valid pointer and a not null obj
 
         genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/colored_cube.obj");
@@ -56,108 +61,14 @@ namespace gen {
 
         auto surface = GenGameObject::createGameObject();
         surface.model = genModel;
-        surface.transform.translation = { 0.f,0.0f,0.f };
-        surface.transform.scale = glm::vec3(3.f);
+        surface.transform.translation = { 0.f,0.0f,-3.5f };
+        surface.transform.scale = glm::vec3(8.f);
         gameObjects.emplace(surface.getId(), std::move(surface));
 
-        // first sound node
-        genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/sphere.obj");
-        auto sphere = GenGameObject::createGameObject();
-        sphere.model = genModel;
-        sphere.color = glm::vec3{ 1.0f, 0.0f, 0.0f };
-        sphere.soundDisc = std::make_unique<SoundDiscComponent>();
-        sphere.soundDisc->radius = .5f;
-        sphere.soundDisc->visible = true;
-        sphere.soundDisc->isPlayerControlled = true;
-        sphere.transform.translation = { -1.f,-0.5f,-1.5f };
-        sphere.transform.scale = glm::vec3(.1f);
-        sphere.type = ObjectType::Node;
-        sphere.node = std::make_unique<NodeComponent>();
-        sphere.node->selfPosition = sphere.transform.translation;
-        gameObjects.emplace(sphere.getId(), std::move(sphere));
+ 
 
-        genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/sphere.obj");
-        auto sphere2 = GenGameObject::createGameObject();
-        sphere2.model = genModel;
-        sphere2.color = glm::vec3{ 1.0f, 0.0f, 0.0f };
-        sphere2.soundDisc = std::make_unique<SoundDiscComponent>();
-        sphere2.soundDisc->radius = .5f;
-        sphere2.soundDisc->visible = true;
-        sphere2.soundDisc->isPlayerControlled = true;
-        sphere2.transform.translation = { -3.f,-0.5f,-1.5f };
-        sphere2.transform.scale = glm::vec3(.1f);
-        sphere2.type = ObjectType::Node;
-        sphere2.node = std::make_unique<NodeComponent>();
-        sphere2.node->selfPosition = sphere2.transform.translation;
-
-        gameObjects.emplace(sphere2.getId(), std::move(sphere2));
-
-        genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/sphere.obj");
-        auto sphere3 = GenGameObject::createGameObject();
-        sphere3.model = genModel;
-        sphere3.color = glm::vec3{ 1.0f, 0.0f, 0.0f };
-        sphere3.soundDisc = std::make_unique<SoundDiscComponent>();
-        sphere3.soundDisc->radius = .5f;
-        sphere3.soundDisc->visible = true;
-        sphere3.soundDisc->isPlayerControlled = true;
-        sphere3.transform.translation = { 1.f,-0.5f,-1.5f };
-        sphere3.transform.scale = glm::vec3(.1f);
-        sphere3.type = ObjectType::Node;
-        sphere3.node = std::make_unique<NodeComponent>();
-        sphere3.node->selfPosition = sphere3.transform.translation;
-
-        gameObjects.emplace(sphere3.getId(), std::move(sphere3));
-
-        genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/sphere.obj");
-        auto sphere4 = GenGameObject::createGameObject();
-        sphere4.model = genModel;
-        sphere4.color = glm::vec3{ 1.0f, 0.0f, 0.0f };
-        sphere4.soundDisc = std::make_unique<SoundDiscComponent>();
-        sphere4.soundDisc->radius = .5f;
-        sphere4.soundDisc->visible = true;
-        sphere4.soundDisc->isPlayerControlled = true;
-        sphere4.transform.translation = { -1.f,-0.5f,.5f };
-        sphere4.transform.scale = glm::vec3(.1f);
-        sphere4.type = ObjectType::Node;
-        sphere4.node = std::make_unique<NodeComponent>();
-        sphere4.node->selfPosition = sphere4.transform.translation;
-        gameObjects.emplace(sphere4.getId(), std::move(sphere4));
-
-        genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/sphere.obj");
-        auto sphere5 = GenGameObject::createGameObject();
-        sphere5.model = genModel;
-        sphere5.color = glm::vec3{ 1.0f, 0.0f, 0.0f };
-        sphere5.soundDisc = std::make_unique<SoundDiscComponent>();
-        sphere5.soundDisc->radius = .5f;
-        sphere5.soundDisc->visible = true;
-        sphere5.soundDisc->isPlayerControlled = true;
-        sphere5.transform.translation = { -3.f,-0.5f,.5f };
-        sphere5.transform.scale = glm::vec3(.1f);
-        sphere5.type = ObjectType::Node;
-        sphere5.node = std::make_unique<NodeComponent>();
-        sphere5.node->selfPosition = sphere5.transform.translation;
-
-        gameObjects.emplace(sphere5.getId(), std::move(sphere5));
-
-
-        //last sound node
-        genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/sphere.obj");
-        auto sphere6 = GenGameObject::createGameObject();
-        sphere6.model = genModel;
-        sphere6.color = glm::vec3{ 1.0f, 0.0f, 0.0f };
-        sphere6.soundDisc = std::make_unique<SoundDiscComponent>();
-        sphere6.soundDisc->radius = .5f;
-        sphere6.soundDisc->visible = true;
-        sphere6.soundDisc->isPlayerControlled = true;
-        sphere6.transform.translation = { 1.f,-0.5f,.5f };
-        sphere6.transform.scale = glm::vec3(.1f);
-        sphere6.type = ObjectType::Node;
-        sphere6.node = std::make_unique<NodeComponent>();
-        sphere6.node->selfPosition = sphere6.transform.translation;
-
-        gameObjects.emplace(sphere6.getId(), std::move(sphere6));
-
-
+        addNodeCluster1(genDevice, gameObjects);
+        //addNodeCluster2(genDevice, gameObjects);
 
         { // lumina alba din cub
             auto pointLight = GenGameObject::makePointLight(0.2f);

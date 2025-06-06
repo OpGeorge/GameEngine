@@ -16,8 +16,9 @@ layout(set= 0,binding = 0) uniform GlobalUbo
 	mat4 view;
 	mat4 invView;
 	vec4 ambientLightColor;
-	PointLight pointLights[10];
+	PointLight pointLights[100];
 	int numLights;
+	vec3 padding;
 
 } ubo;
 

@@ -54,6 +54,11 @@ namespace gen {
 			float elapsedTime
 			);
 
+		void resetLevelTransforms(const std::unordered_map<std::string, TransformComponent>& initialTransforms);
+
+		std::unordered_map<std::string, TransformComponent> initialTransformsLevel1;
+		std::unordered_map<std::string, TransformComponent> initialTransformsLevel2;
+
 	private:
 
 		void loadGameObjects();
@@ -83,6 +88,8 @@ namespace gen {
 		std::unordered_map<GenGameObject::id_t, int> lastTextureChangeFrame;
 
 		std::unordered_map<GenGameObject::id_t, float> nodeCooldowns;
+
+
 
 	};
 }
