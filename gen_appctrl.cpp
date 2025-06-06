@@ -59,9 +59,9 @@ namespace gen {
         const int maxObjects = static_cast<int>(gameObjects.size()) + 10;  // Add padding
 
         globalPool = GenDescriptorPool::Builder(genDevice)
-            .setMaxSets(1000)
-            .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000)
-            .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000)
+            .setMaxSets(2000)
+            .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 2000)
+            .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 2000)
             .build();
 
     }
@@ -434,7 +434,7 @@ namespace gen {
                             propagationSystem.propagateFromNode(
                                 obj,
                                 gameObjects,
-                                3.5f,
+                                1.4f,
                                 getCachedTexture("textures/orange.png"),
                                 getCachedTexture("textures/green.png"),
                                 currentFrameNumber,

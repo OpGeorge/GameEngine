@@ -11,8 +11,8 @@ namespace gen {
         // 1. Two rows in front of player (Z = 0.5 and -0.5)
         for (int row = 0; row < 2; ++row) {
             float z = 0.5f - row * 1.0f;
-            for (int i = -3; i <= 3; ++i) {
-                float x = static_cast<float>(i * 2);
+            for (int i = -5; i <= 5; ++i) {
+                float x = static_cast<float>(i * 1.2f);
                 positions.emplace_back(x + xOffset, -0.5f, z + zOffset);
             }
         }
@@ -26,8 +26,8 @@ namespace gen {
         // 3. Four more rows (Z = -6.5 to -9.5)
         for (int row = 0; row < 4; ++row) {
             float z = -6.5f - row * 1.0f;
-            for (int i = -3; i <= 3; ++i) {
-                float x = static_cast<float>(i * 2);
+            for (int i = -5; i <= 5; ++i) {
+                float x = static_cast<float>(i * 1.2f);
                 positions.emplace_back(x + xOffset, -0.5f, z + zOffset);
             }
         }
@@ -58,8 +58,8 @@ namespace gen {
         // 1. Two rows in front of player (Z = 0.5 and -0.5)
         for (int row = 0; row < 2; ++row) {
             float z = 0.5f - row * 1.0f;
-            for (int i = -3; i <= 3; ++i) {
-                float x = static_cast<float>(i * 2);
+            for (int i = -5; i <= 5; ++i) {
+                float x = static_cast<float>(i * 1.2f);
                 positions.emplace_back(x + xOffset, -0.5f, z + zOffset);
             }
         }
@@ -79,8 +79,8 @@ namespace gen {
         // 3. Four more rows (Z = -6.5 to -9.5)
         for (int row = 0; row < 4; ++row) {
             float z = -6.5f - row * 1.0f;
-            for (int i = -3; i <= 3; ++i) {
-                float x = static_cast<float>(i * 2);
+            for (int i = -5; i <= 5; ++i) {
+                float x = static_cast<float>(i * 1.2f);
                 positions.emplace_back(x + xOffset, -0.5f, z + zOffset);
             }
         }
