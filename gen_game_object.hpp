@@ -82,6 +82,10 @@ namespace gen {
 		float idleTimer = 0.f;
 	};
 
+	struct GoalComponent {
+		float triggerRadius = 1.5f;
+	};
+
 
 	class GenGameObject {
 
@@ -118,6 +122,8 @@ namespace gen {
 		std::unique_ptr<SoundDiscComponent> soundDisc = nullptr;
 		std::unique_ptr<NodeComponent> node = nullptr;
 		std::unique_ptr<NPCBehaviorComponent> npcBehavior = nullptr;
+		std::unique_ptr<GoalComponent> goal = nullptr;
+
 
 		std::string tag = "";
 
