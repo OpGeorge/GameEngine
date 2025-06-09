@@ -15,7 +15,7 @@
 #include "levels/level2_loader.hpp"
 
 
-
+#define GLM_ENABLE_EXPERIMENTAL
 
 #define GLM_FORCE_RADIENTS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -395,6 +395,34 @@ namespace gen {
             else {
                 switchPressedLastFrame = false;
             }
+
+            /// goal detection 
+            for (auto& [id, obj] : *activeGameObjects) {
+                if (!obj.goal) continue;
+
+                float distanceSq = glm::distance2(
+                    controllableObjects[activeObjectIndex]->transform.translation,
+                    obj.transform.translation
+                );
+
+                float radiusSq = obj.goal->triggerRadius * obj.goal->triggerRadius;
+
+                static bool ePressedLastFrame = false;
+                bool ePressed = glfwGetKey(genWindow.getGLFWwindow(), GLFW_KEY_E) == GLFW_PRESS;
+
+                if (distanceSq < radiusSq && ePressed && !ePressedLastFrame) {
+                    // Trigger the same behavior as pressing 'C'
+                    activeObjectIndex = (activeObjectIndex + 1) % controllableObjects.size();
+                    followPlayerCamera = true;
+                    firstFollowBind = true;
+
+                    std::cout << "Goal reached! Switching camera to follow player index: "
+                        << activeObjectIndex << "\n";
+                }
+
+                ePressedLastFrame = ePressed;
+            }
+
 
             static bool rPressedLastFrame = false;
             if (glfwGetKey(genWindow.getGLFWwindow(), GLFW_KEY_R) == GLFW_PRESS) {

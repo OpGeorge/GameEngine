@@ -42,7 +42,7 @@ namespace gen {
         genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/flat_vase.obj");
         auto flatVase = GenGameObject::createGameObject();
         flatVase.model = genModel;
-        flatVase.transform.translation = { 1.f,0.0f,0.f };
+        flatVase.transform.translation = { 1.f,0.0f,-7.f };
         flatVase.transform.scale = glm::vec3(3.f);
         flatVase.type = ObjectType::NPC;
         flatVase.npcBehavior = std::make_unique<NPCBehaviorComponent>();
@@ -52,8 +52,9 @@ namespace gen {
         genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/colored_cube.obj");
         auto coloredCube = GenGameObject::createGameObject();
         coloredCube.model = genModel;
-        coloredCube.transform.translation = { 0.f,-.5f,0.f };
+        coloredCube.transform.translation = { 0.f,-.5f,2.f };
         coloredCube.transform.scale = glm::vec3(0.5f);
+        coloredCube.goal = std::make_unique<GoalComponent>();
         gameObjects.emplace(coloredCube.getId(), std::move(coloredCube));
 
         //ground
