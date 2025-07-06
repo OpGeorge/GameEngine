@@ -36,32 +36,37 @@ namespace gen {
         vase.tag = "level2_player";
         gameObjects.emplace(vase.getId(), std::move(vase));
 
-        //// Repeat for other objects like flat vase, cube, lights, etc.
-        //genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/flat_vase.obj");
-        //auto flatVase = GenGameObject::createGameObject();
-        //flatVase.model = genModel;
-        //flatVase.transform.translation = { 1.f,0.0f,0.f };
-        //flatVase.transform.scale = glm::vec3(3.f);
-        //flatVase.type = ObjectType::NPC;
-        //flatVase.npcBehavior = std::make_unique<NPCBehaviorComponent>();
-        //flatVase.tag = "level1_npc_1";
-        //gameObjects.emplace(flatVase.getId(), std::move(flatVase)); // make sure the move has a valid pointer and a not null obj
+        // Repeat for other objects like flat vase, cube, lights, etc.
+        genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/flat_vase.obj");
+        auto flatVase = GenGameObject::createGameObject();
+        flatVase.model = genModel;
+        flatVase.transform.translation = { 1.f,0.0f,0.f };
+        flatVase.transform.scale = glm::vec3(3.f);
+        flatVase.type = ObjectType::NPC;
+        flatVase.npcBehavior = std::make_unique<NPCBehaviorComponent>();
+        flatVase.tag = "level1_npc_1";
+        gameObjects.emplace(flatVase.getId(), std::move(flatVase)); // make sure the move has a valid pointer and a not null obj
 
-        //genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/colored_cube.obj");
-        //auto coloredCube = GenGameObject::createGameObject();
-        //coloredCube.model = genModel;
-        //coloredCube.transform.translation = { 0.f,-.5f,0.f };
-        //coloredCube.transform.scale = glm::vec3(0.5f);
-        //gameObjects.emplace(coloredCube.getId(), std::move(coloredCube));
+        genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/colored_cube.obj");
+        auto coloredCube = GenGameObject::createGameObject();
+        coloredCube.model = genModel;
+        coloredCube.transform.translation = { 0.f,-.5f,0.f };
+        coloredCube.transform.scale = glm::vec3(0.5f);
+        gameObjects.emplace(coloredCube.getId(), std::move(coloredCube));
 
-        //ground
+              //ground
+
         genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/quad.obj");
-
+        //auto texture2 = std::make_shared<GenTexture>(genDevice, "textures/ceramic_10_basecolor-4K.png");
         auto surface = GenGameObject::createGameObject();
         surface.model = genModel;
+        //surface.texture = texture2;
         surface.transform.translation = { -20.f,0.0f,-3.5f };
         surface.transform.scale = glm::vec3(8.f);
+
         gameObjects.emplace(surface.getId(), std::move(surface));
+
+
 
 
 
@@ -70,7 +75,7 @@ namespace gen {
 
         { // lumina alba din cub
             auto pointLight = GenGameObject::makePointLight(4.2f,0.1f);
-            pointLight.transform.translation = glm::vec3{ -20.0f,-5.5f,.0f };
+            pointLight.transform.translation = glm::vec3{ -20.0f,-4.5f,-5.0f };
             pointLight.type = ObjectType::Light;
             gameObjects.emplace(pointLight.getId(), std::move(pointLight));
         }

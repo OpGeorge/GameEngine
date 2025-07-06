@@ -178,6 +178,11 @@ namespace gen {
                         std::cout << "[NPC] Reached root node.\n";
                     }
                 }
+                else {
+                    behavior.state = NPCState::IdleRoaming;
+                    behavior.currentTargetNodeId = -1;
+                    std::cout << "[NPC] Reached root node (no parent).\n";
+                }
             }
         }
         else if (behavior.state == NPCState::TracingToRoot) {

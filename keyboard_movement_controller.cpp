@@ -88,7 +88,8 @@ namespace gen {
 			gameObject.transform.translation.y = 0.f;
 		}
 
-
+		//std::cout << gameObject.transform.translation.x << "  X  " << std::endl;
+		//std::cout << gameObject.transform.translation.z << "  Z  " << std::endl;
 	}
 
 

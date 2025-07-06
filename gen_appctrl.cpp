@@ -11,6 +11,9 @@
 #include "gen_obj_movement.hpp"
 #include "gen_npc_controller.hpp"
 
+#include "levels/mem_test_loader.hpp"
+#include "levels/mem_test_npc_grid_loader.hpp"
+
 #include "levels/level1_loader.hpp"
 #include "levels/level2_loader.hpp"
 
@@ -52,7 +55,14 @@ namespace gen {
                 initialTransformsLevel2[obj.tag] = obj.transform;
             }
         }
+
+        //MemTestLoader::addNodes1000(genDevice, gameObjects);
+        //MemTestNPCGridLoader::addNPCs100(genDevice, gameObjects);
+
+
         activeGameObjects = &gameObjects;
+
+        
 
         std::srand(static_cast<unsigned>(std::time(nullptr)));
 
@@ -158,7 +168,7 @@ namespace gen {
 
                     // Safely destroy old pool and build a new one
                     globalPool = GenDescriptorPool::Builder(genDevice)
-                        .setMaxSets(1000)  // or increase this number
+                        .setMaxSets(2000)  // or increase this number
                         .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000)
                         .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000)
                         .build();
@@ -622,7 +632,7 @@ namespace gen {
         if (!player.soundDisc) return;
 
         // Simple key press detection
-        const std::vector<int> moveKeys = { GLFW_KEY_I, GLFW_KEY_J, GLFW_KEY_K, GLFW_KEY_L };
+        const std::vector<int> moveKeys = { GLFW_KEY_A, GLFW_KEY_S, GLFW_KEY_D, GLFW_KEY_W };
         bool isMovingKeyPressed = false;
         for (int key : moveKeys) {
             if (glfwGetKey(window, key) == GLFW_PRESS) {
