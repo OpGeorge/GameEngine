@@ -37,7 +37,7 @@ namespace gen {
                     // Normalize pair so (id, otherId) == (otherId, id)
                     auto pair = std::make_pair(std::min(id, otherId), std::max(id, otherId));
                     if (loggedPairs.insert(pair).second) {
-                        std::cout << "Disc overlap: " << pair.first << " <-> " << pair.second << "\n";
+                        //std::cout << "Disc overlap: " << pair.first << " <-> " << pair.second << "\n";
                     }
 
                     if (target.soundDisc->visible) {

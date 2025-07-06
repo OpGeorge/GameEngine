@@ -11,11 +11,14 @@
 #include "gen_obj_movement.hpp"
 #include "gen_npc_controller.hpp"
 
+#include "levels/mem_test_loader.hpp"
+#include "levels/mem_test_npc_grid_loader.hpp"
+
 #include "levels/level1_loader.hpp"
 #include "levels/level2_loader.hpp"
 
 
-
+#define GLM_ENABLE_EXPERIMENTAL
 
 #define GLM_FORCE_RADIENTS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -52,7 +55,14 @@ namespace gen {
                 initialTransformsLevel2[obj.tag] = obj.transform;
             }
         }
+
+        //MemTestLoader::addNodes1000(genDevice, gameObjects);
+        //MemTestNPCGridLoader::addNPCs100(genDevice, gameObjects);
+
+
         activeGameObjects = &gameObjects;
+
+        
 
         std::srand(static_cast<unsigned>(std::time(nullptr)));
 
@@ -158,7 +168,7 @@ namespace gen {
 
                     // Safely destroy old pool and build a new one
                     globalPool = GenDescriptorPool::Builder(genDevice)
-                        .setMaxSets(1000)  // or increase this number
+                        .setMaxSets(2000)  // or increase this number
                         .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000)
                         .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000)
                         .build();
@@ -396,6 +406,34 @@ namespace gen {
                 switchPressedLastFrame = false;
             }
 
+            /// goal detection 
+            for (auto& [id, obj] : *activeGameObjects) {
+                if (!obj.goal) continue;
+
+                float distanceSq = glm::distance2(
+                    controllableObjects[activeObjectIndex]->transform.translation,
+                    obj.transform.translation
+                );
+
+                float radiusSq = obj.goal->triggerRadius * obj.goal->triggerRadius;
+
+                static bool ePressedLastFrame = false;
+                bool ePressed = glfwGetKey(genWindow.getGLFWwindow(), GLFW_KEY_E) == GLFW_PRESS;
+
+                if (distanceSq < radiusSq && ePressed && !ePressedLastFrame) {
+                    // Trigger the same behavior as pressing 'C'
+                    activeObjectIndex = (activeObjectIndex + 1) % controllableObjects.size();
+                    followPlayerCamera = true;
+                    firstFollowBind = true;
+
+                    std::cout << "Goal reached! Switching camera to follow player index: "
+                        << activeObjectIndex << "\n";
+                }
+
+                ePressedLastFrame = ePressed;
+            }
+
+
             static bool rPressedLastFrame = false;
             if (glfwGetKey(genWindow.getGLFWwindow(), GLFW_KEY_R) == GLFW_PRESS) {
                 if (!rPressedLastFrame) {
@@ -594,7 +632,7 @@ namespace gen {
         if (!player.soundDisc) return;
 
         // Simple key press detection
-        const std::vector<int> moveKeys = { GLFW_KEY_I, GLFW_KEY_J, GLFW_KEY_K, GLFW_KEY_L };
+        const std::vector<int> moveKeys = { GLFW_KEY_A, GLFW_KEY_S, GLFW_KEY_D, GLFW_KEY_W };
         bool isMovingKeyPressed = false;
         for (int key : moveKeys) {
             if (glfwGetKey(window, key) == GLFW_PRESS) {

@@ -33,7 +33,7 @@ namespace gen {
         vase.soundDisc = std::make_unique<SoundDiscComponent>();
         vase.soundDisc->radius = 1.0f;
         vase.soundDisc->visible = true;
-        vase.soundDisc->isPlayerControlled = true;
+        vase.soundDisc->isPlayerControlled = true; 
         vase.tag = "level1_player";
 
         gameObjects.emplace(vase.getId(), std::move(vase));
@@ -42,7 +42,7 @@ namespace gen {
         genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/flat_vase.obj");
         auto flatVase = GenGameObject::createGameObject();
         flatVase.model = genModel;
-        flatVase.transform.translation = { 1.f,0.0f,0.f };
+        flatVase.transform.translation = { 1.f,0.0f,-7.f };
         flatVase.transform.scale = glm::vec3(3.f);
         flatVase.type = ObjectType::NPC;
         flatVase.npcBehavior = std::make_unique<NPCBehaviorComponent>();
@@ -52,8 +52,9 @@ namespace gen {
         genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/colored_cube.obj");
         auto coloredCube = GenGameObject::createGameObject();
         coloredCube.model = genModel;
-        coloredCube.transform.translation = { 0.f,-.5f,0.f };
+        coloredCube.transform.translation = { 0.f,-.5f,2.f };
         coloredCube.transform.scale = glm::vec3(0.5f);
+        coloredCube.goal = std::make_unique<GoalComponent>();
         gameObjects.emplace(coloredCube.getId(), std::move(coloredCube));
 
         //ground
@@ -70,11 +71,10 @@ namespace gen {
         addNodeCluster1(genDevice, gameObjects);
         //addNodeCluster2(genDevice, gameObjects);
 
-        { // lumina alba din cub
-            auto pointLight = GenGameObject::makePointLight(0.2f);
-            pointLight.transform.translation = glm::vec3{ .0f,-.5f,.0f };
-            gameObjects.emplace(pointLight.getId(), std::move(pointLight));
-        }
+        auto pointLight = GenGameObject::makePointLight(4.2f, 0.1f);
+        pointLight.transform.translation = glm::vec3{ 0.0f,-4.5f,-5.0f };
+        pointLight.type = ObjectType::Light;
+        gameObjects.emplace(pointLight.getId(), std::move(pointLight));
 
 
         //point lights declaration
