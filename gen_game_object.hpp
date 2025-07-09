@@ -29,7 +29,9 @@ namespace gen {
 		Player,
 		NPC,
 		Sphere,
-		Node
+		Node,
+		Goal,
+		Wall
 	};
 
 

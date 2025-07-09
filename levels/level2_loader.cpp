@@ -40,20 +40,36 @@ namespace gen {
         genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/flat_vase.obj");
         auto flatVase = GenGameObject::createGameObject();
         flatVase.model = genModel;
-        flatVase.transform.translation = { 1.f,0.0f,0.f };
+        flatVase.transform.translation = { -20.f,0.0f,-7.f };
         flatVase.transform.scale = glm::vec3(3.f);
         flatVase.type = ObjectType::NPC;
         flatVase.npcBehavior = std::make_unique<NPCBehaviorComponent>();
-        flatVase.tag = "level1_npc_1";
+        flatVase.tag = "level2_npc_2";
         gameObjects.emplace(flatVase.getId(), std::move(flatVase)); // make sure the move has a valid pointer and a not null obj
 
         genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/colored_cube.obj");
         auto coloredCube = GenGameObject::createGameObject();
         coloredCube.model = genModel;
-        coloredCube.transform.translation = { 0.f,-.5f,0.f };
-        coloredCube.transform.scale = glm::vec3(0.5f);
+        coloredCube.transform.translation = { -20.f,-.5f,-15.f };
+        coloredCube.transform.scale = glm::vec3(0.3f);
+        coloredCube.type = ObjectType::Goal;
         gameObjects.emplace(coloredCube.getId(), std::move(coloredCube));
 
+        auto pointLightGoal = GenGameObject::makePointLight(4.5f, 0.1f, glm::vec3(1.0f,0.843f,0.0f));
+        pointLightGoal.transform.translation = glm::vec3{ -20.0f,-2.5f,-15.0f };
+        pointLightGoal.type = ObjectType::Light;
+        gameObjects.emplace(pointLightGoal.getId(), std::move(pointLightGoal));
+
+
+        genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/quad.obj");
+        //auto texture2 = std::make_shared<GenTexture>(genDevice, "textures/ceramic_10_basecolor-4K.png");
+        auto surface2 = GenGameObject::createGameObject();
+        surface2.model = genModel;
+        //surface.texture = texture2;
+        surface2.transform.translation = { -20.f,0.0f,-14.5f };
+        surface2.transform.scale = glm::vec3(2.0f,1.0f,3.f);
+
+        gameObjects.emplace(surface2.getId(), std::move(surface2));
               //ground
 
         genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/quad.obj");
