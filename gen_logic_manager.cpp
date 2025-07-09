@@ -1,23 +1,41 @@
 #include "gen_logic_manager.hpp"
 #include <iostream>
 #include <set>
+#include <cmath>
+
 
 namespace gen {
 
     void GenLogicManager::update(float dt, GenGameObject::Map& gameObjects) {
         static std::set<std::pair<GenGameObject::id_t, GenGameObject::id_t>> loggedPairs;
 
+        static float timeAccum = 0.f;
+        timeAccum += dt;
+
         for (auto& [id, obj] : gameObjects) {
 
             if (obj.type != ObjectType::Camera &&
                 obj.type != ObjectType::Light &&
                 obj.type != ObjectType::Sphere &&
+                obj.type != ObjectType::Goal &&
+                obj.type != ObjectType::Wall &&
                 obj.transform.translation.y < 0.f) {
-                obj.transform.translation.y += 0.3f * dt; // gravity effect
+                obj.transform.translation.y += 0.7f * dt; // gravity effect
             }
 
             if (obj.transform.translation.y > 0.f) {
                 obj.transform.translation.y = 0.f;
+            }
+
+            if (obj.type == ObjectType::Goal) {
+                // Oscillate Y between 2.0 and 3.0
+                float amplitude = 0.5f;
+                float offset = -1.f;
+                float oscillation = std::sin(timeAccum * 2.0f) * amplitude + offset;
+                obj.transform.translation.y = oscillation;
+
+                // Clean in-place rotation around Y-axis
+                obj.transform.rotation.y += glm::radians(45.0f) * dt;
             }
 
             if (!obj.soundDisc) continue;

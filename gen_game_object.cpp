@@ -41,8 +41,11 @@ namespace gen {
 		const float s2 = glm::sin(rotation.x);
 		const float c1 = glm::cos(rotation.y);
 		const float s1 = glm::sin(rotation.y);
-		const glm::vec3  invScale = 1.0f / scale;
- 		return glm::mat3{
+
+		const glm::vec3 safeScale = glm::max(scale, glm::vec3(0.001f));
+		const glm::vec3 invScale = 1.0f / safeScale;
+ 		
+		return glm::mat3{
 			{
 				invScale.x * (c1 * c3 + s1 * s2 * s3),
 				invScale.x * (c2 * s3),
