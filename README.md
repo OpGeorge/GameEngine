@@ -1,4 +1,4 @@
-#FRAMEWORK PENTRU CREAREA JOCURILOR 3D, DEZVOLTAT ÎN VULKAN API.
+# FRAMEWORK PENTRU CREAREA JOCURILOR 3D, DEZVOLTAT ÎN VULKAN API.
 
-#Framework for creating 3D games developed in Vulkan API.
+# Framework for creating 3D games developed in Vulkan API.
 
