@@ -19,6 +19,8 @@ namespace gen {
                 obj.type != ObjectType::Sphere &&
                 obj.type != ObjectType::Goal &&
                 obj.type != ObjectType::Wall &&
+                obj.type != ObjectType::Node &&
+                obj.type != ObjectType::FinalGoal&&
                 obj.transform.translation.y < 0.f) {
                 obj.transform.translation.y += 0.7f * dt; // gravity effect
             }
@@ -36,6 +38,12 @@ namespace gen {
 
                 // Clean in-place rotation around Y-axis
                 obj.transform.rotation.y += glm::radians(45.0f) * dt;
+            }
+
+            if (obj.type == ObjectType::FinalGoal) {
+
+                obj.transform.rotation.y += glm::radians(45.0f) * dt;
+            
             }
 
             if (!obj.soundDisc) continue;

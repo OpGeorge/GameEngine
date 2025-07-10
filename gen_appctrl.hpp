@@ -55,6 +55,7 @@ namespace gen {
 			);
 
 		void resetLevelTransforms(const std::unordered_map<std::string, TransformComponent>& initialTransforms);
+		int currentLevel;
 
 		std::unordered_map<std::string, TransformComponent> initialTransformsLevel1;
 		std::unordered_map<std::string, TransformComponent> initialTransformsLevel2;

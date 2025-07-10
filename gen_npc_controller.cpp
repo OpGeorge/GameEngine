@@ -85,8 +85,15 @@ namespace gen {
             float dist = glm::length(npcPos - playerPos);
 
             if (dist <= npcKillRadius) {
-                std::cout << "[NPC Trigger] Restart due to player proximity\n";
-                appCtrl->resetLevelTransforms(appCtrl->initialTransformsLevel1);  // direct call
+                if (appCtrl->currentLevel % 2 == 0) {
+                    std::cout << "[NPC Trigger] Restart due to player proximity\n";
+                    appCtrl->resetLevelTransforms(appCtrl->initialTransformsLevel1);
+                }
+                else {
+                    std::cout << "[NPC Trigger] Restart due to player proximity\n";
+                    appCtrl->resetLevelTransforms(appCtrl->initialTransformsLevel2);
+                }
+                  // direct call
                 return;
             }
         }
