@@ -1,4 +1,4 @@
-# Sound, triggers, sphere logic branch
+#FRAMEWORK PENTRU CREAREA JOCURILOR 3D, DEZVOLTAT ÎN VULKAN API.
 
-This branch is for the implementation of some of the core mechanics
+#Framework for creating 3D games developed in Vulkan API.
 
