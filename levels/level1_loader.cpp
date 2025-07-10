@@ -20,18 +20,19 @@ namespace gen {
         
         startingCameraPos = glm::vec3(0.f, 0.0f, 1.f);
 
-        auto texture = std::make_shared<GenTexture>(genDevice, "textures/vaseTexture.png");
+        auto texture = std::make_shared<GenTexture>(genDevice, "textures/red.png");
         auto texture2 = std::make_shared<GenTexture>(genDevice, "textures/space-cruiser.png");
         auto texture3 = std::make_shared<GenTexture>(genDevice, "textures/floor.png");
+        auto texture4 = std::make_shared<GenTexture>(genDevice, "textures/blue.png");
 
-        std::shared_ptr<GenModel> genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/smooth_vase.obj");
+        std::shared_ptr<GenModel> genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/Player Model.obj");
         auto vase = GenGameObject::createGameObject();
         vase.model = genModel;
         vase.texture = texture;
         vase.type = ObjectType::Player;
         vase.transform.translation = { 0.0f, -2.0f, 2.5f };
         vase.transform.rotation.y = glm::radians(180.f);
-        vase.transform.scale = glm::vec3(3.f);
+        vase.transform.scale = glm::vec3(0.3f);
         vase.soundDisc = std::make_unique<SoundDiscComponent>();
         vase.soundDisc->radius = 1.0f;
         vase.soundDisc->visible = true;
@@ -41,11 +42,12 @@ namespace gen {
         gameObjects.emplace(vase.getId(), std::move(vase));
 
         // Repeat for other objects like flat vase, cube, lights, etc.
-        genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/flat_vase.obj");
+        genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/Player Model.obj");
         auto flatVase = GenGameObject::createGameObject();
         flatVase.model = genModel;
         flatVase.transform.translation = { 1.f,0.0f,-7.f };
-        flatVase.transform.scale = glm::vec3(3.f);
+        flatVase.transform.scale = glm::vec3(0.4f);
+        flatVase.texture = texture4;
         flatVase.type = ObjectType::NPC;
         flatVase.npcBehavior = std::make_unique<NPCBehaviorComponent>();
         flatVase.tag = "level1_npc_1";
@@ -197,8 +199,75 @@ namespace gen {
         facingWall.type = ObjectType::Wall;
         gameObjects.emplace(facingWall.getId(), std::move(facingWall));
 
+        genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/quad.obj");
+        auto facingWall2 = GenGameObject::createGameObject();
+        facingWall2.model = genModel;
+        facingWall2.transform.translation = { -10.f,-2.5f,-11.5f };
+        facingWall2.texture = texture3;
+        facingWall2.transform.rotation = glm::vec3(glm::radians(-90.0f), glm::radians(0.0f), glm::radians(0.0f));
+        facingWall2.transform.scale = glm::vec3(8.f, 1.0f, 3.5f);
+        facingWall2.type = ObjectType::Wall;
+        gameObjects.emplace(facingWall2.getId(), std::move(facingWall2));
 
+        genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/quad.obj");
+        auto facingWall3 = GenGameObject::createGameObject();
+        facingWall3.model = genModel;
+        facingWall3.transform.translation = { 0.f,-2.5f,-17.5f };
+        facingWall3.texture = texture3;
+        facingWall3.transform.rotation = glm::vec3(glm::radians(-90.0f), glm::radians(0.0f), glm::radians(0.0f));
+        facingWall3.transform.scale = glm::vec3(8.f, 1.0f, 3.5f);
+        facingWall3.type = ObjectType::Wall;
+        gameObjects.emplace(facingWall3.getId(), std::move(facingWall3));
 
+        genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/quad.obj");
+        auto wallLGoal = GenGameObject::createGameObject();
+        wallLGoal.model = genModel;
+        wallLGoal.transform.translation = { 2.f,-2.5f,-19.5f };
+        wallLGoal.texture = texture3;
+        wallLGoal.transform.rotation = glm::vec3(glm::radians(90.0f), glm::radians(90.0f), 0.0f);
+        wallLGoal.transform.scale = glm::vec3(8.f, 1.0f, 3.5f);
+        wallLGoal.type = ObjectType::Wall;
+        gameObjects.emplace(wallLGoal.getId(), std::move(wallLGoal));
+
+        genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/quad.obj");
+        auto wallRGoal = GenGameObject::createGameObject();
+        wallRGoal.model = genModel;
+        wallRGoal.transform.translation = { -2.f,-2.5f,-19.5f };
+        wallRGoal.texture = texture3;
+        wallRGoal.transform.rotation = glm::vec3(glm::radians(-90.0f), glm::radians(90.0f), 0.0f);
+        wallRGoal.transform.scale = glm::vec3(8.f, 1.0f, 3.5f);
+        wallRGoal.type = ObjectType::Wall;
+        gameObjects.emplace(wallRGoal.getId(), std::move(wallRGoal));
+
+        genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/quad.obj");
+        auto backWall = GenGameObject::createGameObject();
+        backWall.model = genModel;
+        backWall.transform.translation = { 0.f,-2.5f,4.5f };
+        backWall.texture = texture3;
+        backWall.transform.rotation = glm::vec3(glm::radians(-90.0f), glm::radians(180.0f), glm::radians(0.0f));
+        backWall.transform.scale = glm::vec3(8.f, 1.0f, 3.5f);
+        backWall.type = ObjectType::Wall;
+        gameObjects.emplace(backWall.getId(), std::move(backWall));
+
+        //Pillar
+        genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/colored_cube.obj");
+        auto pillar = GenGameObject::createGameObject();
+        pillar.model = genModel;
+        pillar.texture = texture3;
+        pillar.transform.translation = { 5.f,-0.f,-3.5f };
+        pillar.transform.scale = glm::vec3(3.5f, 1.f, 2.f);
+        pillar.type = ObjectType::Wall;
+        gameObjects.emplace(pillar.getId(), std::move(pillar));
+
+        //Pillar
+        genModel = GenModel::createModelFromFile(genDevice, "objectmodels/models/colored_cube.obj");
+        auto pillar2 = GenGameObject::createGameObject();
+        pillar2.model = genModel;
+        pillar2.texture = texture3;
+        pillar2.transform.translation = { -5.f,-0.f,-3.5f };
+        pillar2.transform.scale = glm::vec3(3.5f, 1.f, 2.f);
+        pillar2.type = ObjectType::Wall;
+        gameObjects.emplace(pillar2.getId(), std::move(pillar2));
 
         ////point lights declaration
         //std::vector<glm::vec3> lightColors{

@@ -31,7 +31,8 @@ namespace gen {
 		Sphere,
 		Node,
 		Goal,
-		Wall
+		Wall,
+		FinalGoal
 	};
 
 

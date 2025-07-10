@@ -234,21 +234,27 @@ namespace gen {
         {
             auto cam1 = GenGameObject::createGameObject();
             cam1.type = ObjectType::Camera;
-            cam1.transform.translation = { 0.f, -0.3f, 3.f };
+            cam1.transform.translation = { 0.f, -1.3f, 3.f };
             cam1.transform.rotation = { 0.0f,60.0f,0.0f };
 
             auto cam2 = GenGameObject::createGameObject();
             cam2.type = ObjectType::Camera;
-            cam2.transform.translation = { 0.f, -.3f, -2.5f };
+            cam2.transform.translation = { 0.f, -1.3f, -2.5f };
             cam2.transform.rotation = { 0.f, -glm::radians(10.f), 0.f };
 
             auto cam3 = GenGameObject::createGameObject();
-            cam3.transform.translation = { -5.f, -.5f, -5.f };
+            cam3.transform.translation = { -17.f, -1.5f, 3.f };
+            cam3.transform.rotation = { 0.f, -glm::radians(180.f), 0.f };
             cam3.type = ObjectType::Camera;
+
+            auto cam4 = GenGameObject::createGameObject();
+            cam4.transform.translation = { -20.f, -5.5f, -2.f };
+            cam4.transform.rotation = { -glm::radians(25.0f),0.0f, 0.0f };
 
             cameraStand.push_back(std::move(cam1));
             cameraStand.push_back(std::move(cam2));
             cameraStand.push_back(std::move(cam3));
+            cameraStand.push_back(std::move(cam4));
         }
 
         std::vector<GenGameObject*> controllableObjects;
@@ -273,7 +279,8 @@ namespace gen {
 
 
         int activeCameraIndex = 0;
-        int activeObjectIndex = 0;
+        int activeObjectIndex = controllableObjects.size()-1;
+        currentLevel = 0;
         KeyboardMovementController cameraController{};
         const float MAX_FRAME_TIME = 165.f;
 
@@ -327,6 +334,7 @@ namespace gen {
 
                     // Update camera pitch (vertical)
                     cameraPitch -= static_cast<float>(deltaY) * cameraController.mouseSensitivity;
+                    //cameraPitch += cameraController.mouseSensitivity;
                     cameraPitch = glm::clamp(cameraPitch, -1.5f, 1.5f);  // optional clamp
 
 
@@ -406,39 +414,114 @@ namespace gen {
                 switchPressedLastFrame = false;
             }
 
+            ///// goal detection 
+            //for (auto& [id, obj] : *activeGameObjects) {
+            //    if (!obj.goal) continue;
+
+            //    float distanceSq = glm::distance2(
+            //        controllableObjects[activeObjectIndex]->transform.translation,
+            //        obj.transform.translation
+            //    );
+
+            //    float radiusSq = obj.goal->triggerRadius * obj.goal->triggerRadius;
+
+            //    static bool ePressedLastFrame = false;
+            //    bool ePressed = glfwGetKey(genWindow.getGLFWwindow(), GLFW_KEY_E) == GLFW_PRESS;
+
+            //    if (distanceSq < radiusSq && ePressed && !ePressedLastFrame) {
+            //        // Trigger the same behavior as pressing 'C'
+            //        activeObjectIndex = (activeObjectIndex + 1) % controllableObjects.size();
+            //        followPlayerCamera = true;
+            //        firstFollowBind = true;
+
+            //        std::cout << "Goal reached! Switching camera to follow player index: "
+            //            << activeObjectIndex << "\n";
+            //        currentLevel++;
+            //        if (currentLevel % 3 == 2) {
+            //        // trigger completion state
+            //            std::cout << "FINAL Goal reached! "
+            //                << activeObjectIndex << "\n";
+            //        }
+            //        
+            //    }
+
+            //    ePressedLastFrame = ePressed;
+            //}
+
+
             /// goal detection 
+            GenGameObject* closestGoal = nullptr;
+            float closestGoalDistanceSq = 0.0f;
+            bool foundAnyGoal = false;
+
+            glm::vec3 playerPos = controllableObjects[activeObjectIndex]->transform.translation;
+
             for (auto& [id, obj] : *activeGameObjects) {
                 if (!obj.goal) continue;
 
-                float distanceSq = glm::distance2(
-                    controllableObjects[activeObjectIndex]->transform.translation,
-                    obj.transform.translation
-                );
-
+                float distanceSq = glm::distance2(playerPos, obj.transform.translation);
                 float radiusSq = obj.goal->triggerRadius * obj.goal->triggerRadius;
 
-                static bool ePressedLastFrame = false;
-                bool ePressed = glfwGetKey(genWindow.getGLFWwindow(), GLFW_KEY_E) == GLFW_PRESS;
+                if (distanceSq < radiusSq) {
+                    if (!foundAnyGoal || distanceSq < closestGoalDistanceSq) {
+                        closestGoal = &obj;
+                        closestGoalDistanceSq = distanceSq;
+                        foundAnyGoal = true;
+                    }
+                }
+            }
 
-                if (distanceSq < radiusSq && ePressed && !ePressedLastFrame) {
-                    // Trigger the same behavior as pressing 'C'
+            // Static state tracking
+            static bool ePressedLastFrame = false;
+            bool ePressed = glfwGetKey(genWindow.getGLFWwindow(), GLFW_KEY_E) == GLFW_PRESS;
+
+            // If a valid goal was found and E is freshly pressed
+            if (foundAnyGoal && closestGoal && ePressed && !ePressedLastFrame) {
+                
+                currentLevel++;
+                if (currentLevel == 3) {
+                    currentLevel = 0;
+                }
+
+                if (currentLevel % 3 > 1) {
+                    std::cout << "FINAL Goal reached! " << activeObjectIndex << "\n";
+                    
+                    activeCameraIndex = cameraStand.size() - 1;
+                    followPlayerCamera = false;
+                    resetLevelTransforms(initialTransformsLevel1);
+                    resetLevelTransforms(initialTransformsLevel2);
+                    currentLevel = 2;
+                }
+                else {
                     activeObjectIndex = (activeObjectIndex + 1) % controllableObjects.size();
                     followPlayerCamera = true;
                     firstFollowBind = true;
 
                     std::cout << "Goal reached! Switching camera to follow player index: "
                         << activeObjectIndex << "\n";
+                   
                 }
 
-                ePressedLastFrame = ePressed;
+                
             }
+
+            ePressedLastFrame = ePressed;
+
+
 
 
             static bool rPressedLastFrame = false;
             if (glfwGetKey(genWindow.getGLFWwindow(), GLFW_KEY_R) == GLFW_PRESS) {
                 if (!rPressedLastFrame) {
-                    std::cout << "Resetting Level 1 positions...\n";
-                    resetLevelTransforms(initialTransformsLevel1);
+                    if(currentLevel % 3 == 0){
+                        std::cout << "Resetting Level 1 positions...\n";
+                        resetLevelTransforms(initialTransformsLevel1);
+                    }
+                    else if (currentLevel % 3 == 1) {
+                        std::cout << "Resetting Level 2 positions...\n";
+                        resetLevelTransforms(initialTransformsLevel2);
+                    }
+
                 }
                 rPressedLastFrame = true;
             }
